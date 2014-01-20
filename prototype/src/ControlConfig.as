@@ -19,7 +19,8 @@ package
 		public static var ACTION_HEAVY : String = "ACTION_HEAVY";
 		public static var ACTION_BLOCK : String = "ACTION_BLOCK";
 		public static var ACTION_PROJECTILE : String = "ACTION_PROJECTILE";
-		public static var ACTION_TAUNT : String = "ACTION_TAUNT";
+		public static var ACTION_TAUNT_1 : String = "ACTION_TAUNT_1";
+		public static var ACTION_TAUNT_2 : String = "ACTION_TAUNT_2";
 		public static var ACTION_EXPRESSION : String = "ACTION_EXPRESSION";
 		
 		private static var controlData : Object;

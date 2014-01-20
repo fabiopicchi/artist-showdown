@@ -1,0 +1,6 @@
+- Timing system (so I don't have to create a lot of timer control variables)
+- Input buffer
+- Flagging system (check if forceSet and set are necessary, or if only one of them is sufficient)
+- Change attackDuration to accomodation (this way I avoid a situation in which the person filling the json puts inconsistent data)
+- Make system to reference similar data using the same data structure. Example:
+	- 2 hitboxes that differ only on their knockback
