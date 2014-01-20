@@ -5,4 +5,4 @@
 /prototype/application.xml
 /prototype/PackageApp.bat
 /prototype/Run.bat
-/prototype/ArtistShowdown.as3proj
+*.as3proj
