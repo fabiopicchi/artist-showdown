@@ -19,7 +19,9 @@ package
 		
 		private var walls : FlxGroup = new FlxGroup ();
 		private var projectiles : FlxGroup = new FlxGroup ();
+		private var hitboxes : FlxGroup = new FlxGroup ();
 		private var p1 : Character = new Character ();
+		private var p2 : Character = new Character ();
 		private var fullscreen : Boolean = true;
 		
 		public function GameState() 
@@ -34,32 +36,53 @@ package
 				projectiles.add(Object);
 			}
 			
+			if (Object is Hitbox)
+			{
+				hitboxes.add(Object);
+			}
+			
 			return super.add(Object);
+		}
+		
+		override public function remove(Object:FlxBasic, Splice:Boolean = false):FlxBasic 
+		{
+			if (Object is Projectile)
+			{
+				projectiles.remove(Object);
+			}
+			
+			if (Object is Hitbox)
+			{
+				hitboxes.remove(Object);
+			}
+			
+			return super.remove(Object, Splice);
 		}
 		
 		override public function create():void 
 		{
-			FlxG.visualDebug = true;
+			FlxG.bgColor = FlxG.WHITE;
 			FlxG.stage.addEventListener(Event.RESIZE, window_resized);
 			add (p1);
+			add (p2);
 			
 			var left : FlxSprite = new FlxSprite (0, 0);
-			left.makeGraphic (50, FlxG.height);
+			left.makeGraphic (50, FlxG.height, 0xff000000);
 			add (left);
 			left.immovable = true;
 			
 			var right : FlxSprite = new FlxSprite (FlxG.width - 50, 0);
-			right.makeGraphic (50, FlxG.height);
+			right.makeGraphic (50, FlxG.height, 0xff000000);
 			add (right);
 			right.immovable = true;
 			
 			var top : FlxSprite = new FlxSprite (50, 0);
-			top.makeGraphic (FlxG.width - 100, 50);
+			top.makeGraphic (FlxG.width - 100, 50, 0xff000000);
 			add (top);
 			top.immovable = true;
 			
 			var bottom : FlxSprite = new FlxSprite (50, FlxG.height - 50);
-			bottom.makeGraphic (FlxG.width - 100, 50);
+			bottom.makeGraphic (FlxG.width - 100, 50, 0xff000000);
 			add (bottom);
 			bottom.immovable = true;
 			
@@ -80,10 +103,12 @@ package
 			}
 			
 			testPlayerControls (p1, 0);
+			testPlayerControls (p2, 1);
 			
 			super.update();
 			
 			FlxG.collide (walls, p1); 
+			FlxG.collide (walls, p2); 
 			FlxG.collide (projectiles, walls, function (obj1: FlxObject, obj2 : FlxObject) : void
 			{
 				if (obj1 is Projectile)
@@ -95,6 +120,33 @@ package
 					obj2.destroy();
 				}
 			}); 
+			
+			FlxG.overlap (p1, hitboxes, function (obj1 : FlxObject, obj2 : FlxObject) : void
+			{
+				if (obj1 is Hitbox)
+					Character.hitboxCollision(obj2 as Character, obj1 as Hitbox);
+				else
+					Character.hitboxCollision(obj1 as Character, obj2 as Hitbox);
+			}, function (obj1 : FlxObject, obj2 : FlxObject) : Boolean
+			{
+				if (obj2 == p1 || obj1 == p1) return false;
+				else return true;
+				
+			});
+			
+			FlxG.overlap (p2, hitboxes, function (obj1 : FlxObject, obj2 : FlxObject) : void
+			{
+				if (obj1 is Hitbox)
+					Character.hitboxCollision(obj2 as Character, obj1 as Hitbox);
+				else
+					Character.hitboxCollision(obj1 as Character, obj2 as Hitbox);
+			}, function (obj1 : FlxObject, obj2 : FlxObject) : Boolean
+			{
+				if (obj2 == p1 || obj1 == p1) return false;
+				else return true;
+				
+			});
+			
 		}
 		
 		private function testPlayerControls (player: Character, controlConfig : int) : void

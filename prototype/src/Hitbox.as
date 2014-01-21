@@ -10,12 +10,15 @@ package
 	 */
 	public class Hitbox extends FlxSprite
 	{
-		private var knockback : int;
+		private var _knockbackX : int;
+		private var _knockbackY : int;
+		private var _knockbackTime : int;
 		private var id : String;
-		private var hitStun : int;
+		private var _hitStun : int;
 		private var duration : int;
 		private var positionOffset : FlxPoint;
-		private var attacker : IOrigin;
+		private var _attacker : IOrigin;
+		private var _type : int;
 		
 		private static var hitboxJSON : Array;
 		
@@ -53,14 +56,25 @@ package
 			}
 			
 			var hitbox : Hitbox = new Hitbox;
-			hitbox.knockback = hitboxData.knockback;
-			hitbox.hitStun = hitboxData.hitStun;
+			hitbox._knockbackX = hitboxData.knockbackX;
+			hitbox._knockbackY = hitboxData.knockbackY;
+			hitbox._knockbackTime = hitboxData.knockbackTime;
+			hitbox._hitStun = hitboxData.hitStun;
 			hitbox.positionOffset = new FlxPoint (hitboxData.xOffset, hitboxData.yOffset);
-			hitbox.attacker = attacker;
+			hitbox._attacker = attacker;
 			hitbox.width = hitboxData.width;
 			hitbox.height = hitboxData.height;
 			hitbox.duration = hitboxData.duration;
 			hitbox.id = hitboxData.id;
+			
+			if (hitboxData.id == "projectile")
+			{
+				hitbox._type = HitboxType.PROJECTILE;
+			}
+			else
+			{
+				hitbox._type = HitboxType.MELEE;
+			}
 			
 			if (id.indexOf("_weak") >= 0)
 			{
@@ -77,6 +91,36 @@ package
 		public function hasHitboxEnded (currentTime : int) : Boolean
 		{
 			return currentTime >= duration;
+		}
+		
+		public function get hitStun():int 
+		{
+			return _hitStun;
+		}
+		
+		public function get type():int 
+		{
+			return _type;
+		}
+		
+		public function get knockbackX():int 
+		{
+			return _knockbackX;
+		}
+		
+		public function get knockbackY():int 
+		{
+			return _knockbackY;
+		}
+		
+		public function get knockbackTime():int 
+		{
+			return _knockbackTime;
+		}
+		
+		public function get attacker():IOrigin 
+		{
+			return _attacker;
 		}
 	}
 

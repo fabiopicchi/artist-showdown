@@ -5,6 +5,7 @@ package
 	import org.flixel.FlxG;
 	import org.flixel.FlxObject;
 	import org.flixel.FlxSprite;
+	import org.flixel.FlxU;
 	import utils.BitFlagControl;
 	import utils.JSONLoader;
 	
@@ -38,16 +39,20 @@ package
 		private var shortHopTimer : int = 0;
 		private var dashTimer : int = 0;
 		private var projectileTimer : int = 0;
+		private var hitStunTimer : int = 0;
+		private var knockbackTimer : int = 0;
 		private var jumpOrigin : int = 0;
 		private var attacks : Dictionary = new Dictionary ();
 		private var currentAttack:Attack;
 		private var facingHit:int;
-		private var specialLevel : Number = 3;
+		private var specialLevel : Number = 0;
+		private var hurtboxType : int = HurtboxType.NORMAL;
 		
 		public function Character() 
 		{
 			super(50, 50);
 			makeGraphic(50, 100, 0xffff9900);
+			hurtboxType = HurtboxType.NORMAL;
 					
 			flagControl.addFlag("MOVING");
 			flagControl.addFlag("JUMP");
@@ -65,6 +70,8 @@ package
 			flagControl.addFlag("PROJECTILE_LOCK");
 			flagControl.addFlag("TAUNT");
 			flagControl.addFlag("EXPRESSION");
+			flagControl.addFlag("HIT_STUN");
+			flagControl.addFlag("KNOCKBACK");
 			
 			width = WIDTH;
 			height = HEIGHT;
@@ -187,17 +194,20 @@ package
 				}
 				else
 				{
-					if (currentAttack.isOnSetup())
+					if (currentAttack.isOnSetup() && hurtboxType != HurtboxType.MELEE_ONLY)
 					{
 						makeGraphic(WIDTH, HEIGHT, 0xff00ff00);
+						hurtboxType = HurtboxType.MELEE_ONLY;
 					}
-					else if (currentAttack.isOnAccomodation())
+					else if (currentAttack.isOnAccomodation() && hurtboxType != HurtboxType.NORMAL)
 					{
 						makeGraphic(WIDTH, HEIGHT, 0xffff9900);
+						hurtboxType = HurtboxType.NORMAL;
 					}
-					else
+					else if (hurtboxType != HurtboxType.IMUNE)
 					{
 						makeGraphic(WIDTH, HEIGHT, 0xff00ffff);
+						hurtboxType = HurtboxType.IMUNE;
 					}
 				}
 			}
@@ -213,15 +223,37 @@ package
 					velocity.x = PLAYER_SPEED;
 				}
 			}
-			else if (!flagControl.flagSet("DASH_COOLDOWN"))
+			else if (!(flagControl.flagSet("DASH_COOLDOWN") || flagControl.flagSet("KNOCKBACK")))
 			{
 				velocity.x = 0;
+			}
+			
+			if (flagControl.flagSet("HIT_STUN"))
+			{
+				hitStunTimer -= FlxG.elapsed * 1000;
+				if (hitStunTimer <= 0)
+				{
+					flagControl.forceResetFlag("HIT_STUN");
+				}
+			}
+			
+			if (flagControl.flagSet("KNOCKBACK"))
+			{
+				knockbackTimer -= FlxG.elapsed * 1000;
+				
+				if (knockbackTimer<= 0)
+				{
+					flagControl.forceResetFlag("KNOCKBACK");
+					this.acceleration.y = GRAVITY;
+					acceleration.x = 0;
+					maxVelocity.y = JUMP_SPEED;
+				}
 			}
 		}
 		
 		private function canMove(): Boolean 
 		{
-			return (!(flagControl.flagSet("EXPRESSION") || flagControl.flagSet("DASH") || flagControl.flagSet("BLOCK") || flagControl.flagSet("LIGHT") || flagControl.flagSet("HEAVY") || flagControl.flagSet("THROWING_PROJECTILE") || flagControl.flagSet("TAUNT")));
+			return (!(flagControl.flagSet("KNOCKBACK") || flagControl.flagSet("HIT_STUN") || flagControl.flagSet("EXPRESSION") || flagControl.flagSet("DASH") || flagControl.flagSet("BLOCK") || flagControl.flagSet("LIGHT") || flagControl.flagSet("HEAVY") || flagControl.flagSet("THROWING_PROJECTILE") || flagControl.flagSet("TAUNT")));
 		}
 		
 		public function onAir () : Boolean
@@ -249,7 +281,7 @@ package
 		
 		public function jump () : void
 		{
-			if (flagControl.flagSet("EXPRESSION") || flagControl.flagSet("DASH") || flagControl.flagSet("BLOCK") || flagControl.flagSet("LIGHT") || flagControl.flagSet("HEAVY") || flagControl.flagSet("THROWING_PROJECTILE") || flagControl.flagSet("TAUNT")) return;
+			if (flagControl.flagSet("KNOCKBACK") || flagControl.flagSet("HIT_STUN") || flagControl.flagSet("EXPRESSION") || flagControl.flagSet("DASH") || flagControl.flagSet("BLOCK") || flagControl.flagSet("LIGHT") || flagControl.flagSet("HEAVY") || flagControl.flagSet("THROWING_PROJECTILE") || flagControl.flagSet("TAUNT")) return;
 			
 			if (!onAir())
 			{
@@ -270,7 +302,7 @@ package
 		
 		public function shortHop () : void
 		{
-			if (!onShortHopWindow() || flagControl.flagSet("EXPRESSION") || flagControl.flagSet("DASH") || flagControl.flagSet("BLOCK") || flagControl.flagSet("LIGHT") || flagControl.flagSet("HEAVY") || flagControl.flagSet("THROWING_PROJECTILE") || flagControl.flagSet("TAUNT")) return;
+			if (!onShortHopWindow()  || flagControl.flagSet("KNOCKBACK") || flagControl.flagSet("HIT_STUN") || flagControl.flagSet("EXPRESSION") || flagControl.flagSet("DASH") || flagControl.flagSet("BLOCK") || flagControl.flagSet("LIGHT") || flagControl.flagSet("HEAVY") || flagControl.flagSet("THROWING_PROJECTILE") || flagControl.flagSet("TAUNT")) return;
 			
 			this.velocity.y = - Math.sqrt(2 * (SHORT_HOP_HEIGHT - (this.jumpOrigin - this.y)) * GRAVITY);
 			flagControl.forceResetFlag ("JUMP");
@@ -279,23 +311,25 @@ package
 		
 		public function block () : void
 		{
-			if (flagControl.flagSet("EXPRESSION") || flagControl.flagSet("DASH") || flagControl.flagSet("LIGHT") || flagControl.flagSet("BLOCK") || flagControl.flagSet("HEAVY") || flagControl.flagSet("THROWING_PROJECTILE") || flagControl.flagSet("TAUNT")) return;
+			if (flagControl.flagSet("KNOCKBACK") || flagControl.flagSet("HIT_STUN") || flagControl.flagSet("EXPRESSION") || flagControl.flagSet("DASH") || flagControl.flagSet("LIGHT") || flagControl.flagSet("BLOCK") || flagControl.flagSet("HEAVY") || flagControl.flagSet("THROWING_PROJECTILE") || flagControl.flagSet("TAUNT")) return;
 			
 			flagControl.forceSetFlag("BLOCK");
 			this.velocity.x = 0;
 			this.velocity.y = 0;
 			makeGraphic(50, 100, 0xff8822aa);
+			hurtboxType = HurtboxType.BLOCK;
 		}
 		
 		public function unblock () : void
 		{
 			flagControl.forceResetFlag("BLOCK");
 			makeGraphic(50, 100, 0xffff9900);
+			hurtboxType = HurtboxType.NORMAL;
 		}
 		
 		public function light () : void
 		{
-			if (flagControl.flagSet("EXPRESSION") || flagControl.flagSet("DASH") || flagControl.flagSet("BLOCK") || flagControl.flagSet("HEAVY") || flagControl.flagSet("THROWING_PROJECTILE") || flagControl.flagSet("TAUNT")) return;
+			if (flagControl.flagSet("KNOCKBACK") || flagControl.flagSet("HIT_STUN") || flagControl.flagSet("EXPRESSION") || flagControl.flagSet("DASH") || flagControl.flagSet("BLOCK") || flagControl.flagSet("HEAVY") || flagControl.flagSet("THROWING_PROJECTILE") || flagControl.flagSet("TAUNT")) return;
 			
 			var i : int;
 			
@@ -337,7 +371,7 @@ package
 		public function heavy (direction : String) : void
 		{
 			
-			if (flagControl.flagSet("EXPRESSION") || flagControl.flagSet("DASH") || flagControl.flagSet("BLOCK") || flagControl.flagSet("HEAVY") || flagControl.flagSet("LIGHT") || flagControl.flagSet("THROWING_PROJECTILE") || flagControl.flagSet("TAUNT")) return;
+			if (flagControl.flagSet("KNOCKBACK") || flagControl.flagSet("HIT_STUN") || flagControl.flagSet("EXPRESSION") || flagControl.flagSet("DASH") || flagControl.flagSet("BLOCK") || flagControl.flagSet("HEAVY") || flagControl.flagSet("LIGHT") || flagControl.flagSet("THROWING_PROJECTILE") || flagControl.flagSet("TAUNT")) return;
 			
 			facingHit = facing;
 			
@@ -363,7 +397,7 @@ package
 		
 		public function projectile () : void
 		{
-			if (flagControl.flagSet("EXPRESSION") || flagControl.flagSet("DASH") || flagControl.flagSet("BLOCK") || flagControl.flagSet("HEAVY") || flagControl.flagSet("LIGHT") || flagControl.flagSet("THROWING_PROJECTILE") || flagControl.flagSet("PROJECTILE_LOCK") || flagControl.flagSet("TAUNT")) return;
+			if (flagControl.flagSet("KNOCKBACK") || flagControl.flagSet("HIT_STUN") || flagControl.flagSet("EXPRESSION") || flagControl.flagSet("DASH") || flagControl.flagSet("BLOCK") || flagControl.flagSet("HEAVY") || flagControl.flagSet("LIGHT") || flagControl.flagSet("THROWING_PROJECTILE") || flagControl.flagSet("PROJECTILE_LOCK") || flagControl.flagSet("TAUNT")) return;
 			
 			var proj : Projectile = new Projectile (facing, this);
 			
@@ -376,7 +410,7 @@ package
 		
 		public function dash () : void
 		{
-			if (!(flagControl.flagSet("EXPRESSION") || flagControl.flagSet("DASH_BLOCKED") || flagControl.flagSet("DASH_COOLDOWN") || flagControl.flagSet("BLOCK") || flagControl.flagSet("LIGHT") || flagControl.flagSet("TAUNT")))
+			if (!(flagControl.flagSet("KNOCKBACK") || flagControl.flagSet("HIT_STUN") || flagControl.flagSet("EXPRESSION") || flagControl.flagSet("DASH_BLOCKED") || flagControl.flagSet("DASH_COOLDOWN") || flagControl.flagSet("BLOCK") || flagControl.flagSet("LIGHT") || flagControl.flagSet("TAUNT")))
 			{
 				var direction : int = 1;
 				if (facing == FlxObject.LEFT)  direction = -1;
@@ -396,15 +430,17 @@ package
 				flagControl.setFlag("DASH");
 				flagControl.forceSetFlag("DASH_COOLDOWN");
 				makeGraphic(50, 100, 0xffffff00);
+				hurtboxType = HurtboxType.PROJECTILE_ONLY;
 			}
 		}
 		
 		public function taunt () : void
 		{
-			if (flagControl.flagSet("EXPRESSION") || flagControl.flagSet("TAUNT") || flagControl.flagSet("DASH") || flagControl.flagSet("BLOCK") || flagControl.flagSet("HEAVY") || flagControl.flagSet("LIGHT") || flagControl.flagSet("THROWING_PROJECTILE")) return;
+			if (flagControl.flagSet("KNOCKBACK") || flagControl.flagSet("HIT_STUN") || flagControl.flagSet("EXPRESSION") || flagControl.flagSet("TAUNT") || flagControl.flagSet("DASH") || flagControl.flagSet("BLOCK") || flagControl.flagSet("HEAVY") || flagControl.flagSet("LIGHT") || flagControl.flagSet("THROWING_PROJECTILE")) return;
 			
 			flagControl.setFlag("TAUNT");
 			makeGraphic(50, 100, 0xff00ff00);
+			hurtboxType = HurtboxType.MELEE_ONLY;
 		}
 		
 		public function stopTaunt () : void
@@ -413,16 +449,16 @@ package
 			{
 				flagControl.forceResetFlag("TAUNT");
 				makeGraphic(50, 100, 0xffff9900);
+				hurtboxType = HurtboxType.NORMAL;
 			}
 		}
 		
 		public function expression () : void
 		{
 			
-			if (flagControl.flagSet("EXPRESSION") || flagControl.flagSet("DASH") || flagControl.flagSet("HEAVY") || flagControl.flagSet("LIGHT") || flagControl.flagSet("THROWING_PROJECTILE") || flagControl.flagSet("TAUNT")) return;
+			if (flagControl.flagSet("KNOCKBACK") || flagControl.flagSet("HIT_STUN") || flagControl.flagSet("EXPRESSION") || flagControl.flagSet("DASH") || flagControl.flagSet("HEAVY") || flagControl.flagSet("LIGHT") || flagControl.flagSet("THROWING_PROJECTILE") || flagControl.flagSet("TAUNT")) return;
 			
 			flagControl.forceResetFlag("BLOCK");
-			makeGraphic(50, 100, 0xffff9900);
 			facingHit = facing;
 			
 			for (var i : int = 0; i < attacks[ControlConfig.ACTION_EXPRESSION].length; i++)
@@ -480,11 +516,43 @@ package
 			this.acceleration.x = 0;
 			this.velocity.x = 0;
 			makeGraphic(50, 100, 0xffff9900);
+			hurtboxType = HurtboxType.NORMAL;
 		}
 		
 		private function onShortHopWindow () : Boolean
 		{
 			return (flagControl.flagSet("JUMP") && shortHopTimer < SHORT_HOP_THRESHOLD);
+		}
+		
+		public static function hitboxCollision (player : Character, hB : Hitbox) : void
+		{
+			if (player.flagControl.flagSet("HITSTUN") || player.flagControl.flagSet("KNOCKBACK")) return;
+			
+			var directionX : int = (player.getX() - hB.attacker.getX()) / Math.abs(player.getX() - hB.attacker.getX());
+			var directionY : int = hB.knockbackY / Math.abs(hB.knockbackY);
+			
+			switch (player.hurtboxType)
+			{
+				case HurtboxType.NORMAL:
+					player.flagControl.forceSetFlag("HIT_STUN");
+					player.flagControl.forceSetFlag("KNOCKBACK");
+					player.hitStunTimer = hB.hitStun;
+					player.velocity.x = directionX * hB.knockbackX;
+					player.velocity.y = hB.knockbackY;
+					player.maxVelocity.y = Math.abs(hB.knockbackY);
+					player.acceleration.x = - directionX * hB.knockbackX / hB.knockbackTime * 1000;
+					player.acceleration.y = directionY * hB.knockbackY / hB.knockbackTime * 1000;
+					player.knockbackTimer = hB.knockbackTime;
+					break;
+				case HurtboxType.MELEE_ONLY:
+					break;
+				case HurtboxType.PROJECTILE_ONLY:
+					break;
+				case HurtboxType.BLOCK:
+					break;
+				case HurtboxType.IMUNE:
+					break;
+			}
 		}
 	}
 }
