@@ -12,7 +12,7 @@ package
 		
 		private var hitbox : Hitbox;
 		private var direction : Hitbox;
-		private var owner : IThrower;
+		private var _owner : IThrower;
 		private static const PROJECTILE_SPEED : int = 1000;
 		
 		public function Projectile(direction : int, owner : IThrower) 
@@ -21,7 +21,7 @@ package
 			FlxG.state.add (hitbox);
 			this.width = hitbox.width;
 			this.height = hitbox.height;
-			this.owner = owner;
+			this._owner = owner;
 			makeGraphic (width, height, 0x00000000); 
 			hitbox.makeGraphic (width, height, 0xffea9999); 
 			
@@ -63,6 +63,18 @@ package
 		public function facingRight():Boolean 
 		{
 			return false;
+		}
+		
+		/* INTERFACE IOrigin */
+		
+		public function onAir():Boolean 
+		{
+			return false;
+		}
+		
+		public function get owner():IThrower 
+		{
+			return _owner;
 		}
 		
 	}

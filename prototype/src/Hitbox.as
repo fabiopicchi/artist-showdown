@@ -29,8 +29,6 @@ package
 		
 		override public function update():void 
 		{
-			super.update();
-			
 			if (attacker.facingRight())
 			{
 				this.x = attacker.getX() + positionOffset.x - width / 2;
@@ -40,14 +38,13 @@ package
 				this.x = attacker.getX() - positionOffset.x - width / 2;
 			}
 			this.y = attacker.getY() + positionOffset.y - height / 2;
+			
+			super.update();
 		}
 		
 		public static function loadHitbox (id : String, attacker : IOrigin) : Hitbox
 		{
-			if (!hitboxJSON)
-			{
-				hitboxJSON = JSONLoader.loadFile("hitboxes.json") as Array;
-			}
+			hitboxJSON = JSONLoader.loadFile("hitboxes.json") as Array;
 			
 			var hitboxData : Object;
 			for (var i : int = 0; i < hitboxJSON.length; i++)

@@ -18,6 +18,8 @@ package
 		public function Main():void 
 		{
 			super (1366, 768, GameState);
+			FlxG.framerate = 30;
+			FlxG.flashFramerate = 30;
 		}
 	}
 	

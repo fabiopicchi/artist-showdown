@@ -39,6 +39,7 @@ package
 			if (Object is Hitbox)
 			{
 				hitboxes.add(Object);
+				return Object;
 			}
 			
 			return super.add(Object);
@@ -63,8 +64,10 @@ package
 		{
 			FlxG.bgColor = FlxG.WHITE;
 			FlxG.stage.addEventListener(Event.RESIZE, window_resized);
+			add (hitboxes);
 			add (p1);
-			add (p2);
+			add (p1.emitter);
+			//add (p2);
 			
 			var left : FlxSprite = new FlxSprite (0, 0);
 			left.makeGraphic (50, FlxG.height, 0xff000000);
@@ -99,7 +102,8 @@ package
 		{
 			if (FlxG.keys.justReleased("ESCAPE"))
 			{
-				toggle_fullscreen();
+				//toggle_fullscreen();
+				FlxG.switchState(new GameState());
 			}
 			
 			testPlayerControls (p1, 0);
@@ -127,11 +131,6 @@ package
 					Character.hitboxCollision(obj2 as Character, obj1 as Hitbox);
 				else
 					Character.hitboxCollision(obj1 as Character, obj2 as Hitbox);
-			}, function (obj1 : FlxObject, obj2 : FlxObject) : Boolean
-			{
-				if (obj2 == p1 || obj1 == p1) return false;
-				else return true;
-				
 			});
 			
 			FlxG.overlap (p2, hitboxes, function (obj1 : FlxObject, obj2 : FlxObject) : void
@@ -140,13 +139,7 @@ package
 					Character.hitboxCollision(obj2 as Character, obj1 as Hitbox);
 				else
 					Character.hitboxCollision(obj1 as Character, obj2 as Hitbox);
-			}, function (obj1 : FlxObject, obj2 : FlxObject) : Boolean
-			{
-				if (obj2 == p1 || obj1 == p1) return false;
-				else return true;
-				
 			});
-			
 		}
 		
 		private function testPlayerControls (player: Character, controlConfig : int) : void

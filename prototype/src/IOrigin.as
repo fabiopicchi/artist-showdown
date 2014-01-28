@@ -10,6 +10,7 @@ package
 		function getY () : Number;
 		function facingLeft () : Boolean;
 		function facingRight () : Boolean;
+		function onAir () : Boolean;
 	}
 	
 }

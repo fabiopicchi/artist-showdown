@@ -6,7 +6,7 @@ package
 	 */
 	public class Assets 
 	{
-		/*[Embed(source = "../assets/prot_barba_0001.png")]
+		[Embed(source = "../assets/prot_barba_0001.png")]
 		public static const F_0001 : Class;
 		[Embed(source = "../assets/prot_barba_0002.png")]
 		public static const F_0002 : Class;
@@ -466,7 +466,7 @@ package
 		public static const F_0229 : Class;
 		[Embed(source = "../assets/prot_barba_0230.png")]
 		public static const F_0230 : Class;
-		*/
+		
 		public function Assets() 
 		{
 			

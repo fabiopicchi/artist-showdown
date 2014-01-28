@@ -12,16 +12,21 @@ package
 	 */
 	public class Attack extends FlxBasic
 	{
+		private var groundHitboxes : Vector.<Hitbox> = new Vector.<Hitbox> ();
+		private var airHitboxes : Vector.<Hitbox> = new Vector.<Hitbox> ();
 		private var hitboxes : Vector.<Hitbox> = new Vector.<Hitbox> ();
 		
 		//Timing properties
 		private var timer : int;
 		private var setup : int;
+		private var stretch : int;
 		private var accomodation : int;
 		private var currentHitbox : int = -1;
+		private var attacker : IOrigin;
+		private var ended : Boolean = false;
 		
 		//Id and Combolink (id of the linkable move)
-		private var id : String;
+		private var _id : String;
 		private var previous : String = null;
 		
 		private var direction : String;
@@ -39,17 +44,25 @@ package
 		public static function loadAttack (attackData : Object, attacker : IOrigin) : Attack
 		{
 			var attack : Attack = new Attack;
-			var arHitboxes : Array = attackData.hitboxes as Array;
+			var groundHitboxes : Array = attackData.ground.hitboxes as Array;
+			var airHitboxes : Array = attackData.air.hitboxes as Array;
 			
-			for (var i : int = 0; i < arHitboxes.length; i++)
+			for (var i : int = 0; i < groundHitboxes.length; i++)
 			{
-				attack.hitboxes.push(Hitbox.loadHitbox(arHitboxes[i], attacker));
+				attack.groundHitboxes.push(Hitbox.loadHitbox(groundHitboxes[i], attacker));
+			}
+			
+			for (i = 0; i < airHitboxes.length; i++)
+			{
+				attack.airHitboxes.push(Hitbox.loadHitbox(airHitboxes[i], attacker));
 			}
 			
 			attack.setup = attackData.setup;
+			attack.stretch = attackData.stretch;
 			attack.accomodation = attackData.accomodation;
-			attack.id = attackData.id;
+			attack._id = attackData.id;
 			attack.previous = attackData.previous;
+			attack.attacker = attacker;
 			
 			if (!attackData.direction) 
 			{
@@ -83,19 +96,33 @@ package
 					currentHitbox = 0;
 					timer = 0;
 					FlxG.state.add (hitboxes[currentHitbox]);
+					hitboxes[currentHitbox].update();
 				}
 			}
 			
 			else if (currentHitbox >= 0 && currentHitbox < hitboxes.length)
 			{
-				if (hitboxes[currentHitbox].hasHitboxEnded(timer))
+				if (!(id == "heavy_attack_down" && attacker.onAir()))
 				{
-					FlxG.state.remove (hitboxes[currentHitbox++]);
-					if (currentHitbox < hitboxes.length)
+					if (hitboxes[currentHitbox].hasHitboxEnded(timer))
 					{
-						FlxG.state.add (hitboxes[currentHitbox]);
+						FlxG.state.remove (hitboxes[currentHitbox++]);
+						if (currentHitbox < hitboxes.length)
+						{
+							FlxG.state.add (hitboxes[currentHitbox]);
+							hitboxes[currentHitbox].update();
+						}
+						timer = 0;
 					}
+				}
+			}
+			
+			else if (!ended)
+			{
+				if (timer >= stretch)
+				{
 					timer = 0;
+					ended = true;
 				}
 			}
 			
@@ -112,6 +139,9 @@ package
 		
 		public function activate () : void
 		{
+			if (attacker.onAir()) hitboxes = airHitboxes;
+			else hitboxes = groundHitboxes;
+			
 			FlxG.state.add (this);
 			active = true;
 		}
@@ -123,6 +153,7 @@ package
 			timer = 0;
 			currentHitbox = -1;
 			active = false;
+			ended = false;
 		}
 		
 		public function hasPrevious () : Boolean
@@ -134,7 +165,7 @@ package
 		
 		public function canLink (attack : Attack) : Boolean
 		{
-			if (attack.previous == id && isOnAccomodation()) return true;
+			if (attack.previous == id && isOnStretch()) return true;
 			
 			return false;
 		}
@@ -154,9 +185,24 @@ package
 			return (timer < setup && currentHitbox < 0);
 		}
 		
+		public function isOnStretch () : Boolean
+		{
+			return (currentHitbox >= hitboxes.length && timer < stretch && !ended);
+		}
+		
+		public function isOnMeteorFall () : Boolean
+		{
+			return (id == "heavy_attack_down" && attacker.onAir());
+		}
+		
 		public function isOnAccomodation () : Boolean
 		{
-			return (currentHitbox >= hitboxes.length && timer < accomodation);
+			return (ended && timer < accomodation);
+		}
+		
+		public function get id():String 
+		{
+			return _id;
 		}
 	}
 
