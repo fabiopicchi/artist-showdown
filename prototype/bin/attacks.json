@@ -1,0 +1,145 @@
+[
+	{
+		"id" : "light_attack_1",
+		"ground" : 
+		{
+			"hitboxes" : ["light"]
+		},
+		"air" :
+		{
+			"hitboxes" : ["light"]
+		},
+		"input" : "ACTION_LIGHT",
+		"setup" : 140,
+		"stretch" : 140,
+		"accomodation" : 70
+	},
+	{
+		"id" : "light_attack_2",
+		"ground" : 
+		{
+			"hitboxes" : ["light"]
+		},
+		"air" :
+		{
+			"hitboxes" : ["light"]
+		},
+		"input" : "ACTION_LIGHT",
+		"setup" : 140,
+		"stretch" : 140,
+		"accomodation" : 70,
+		"previous" : "light_attack_1"
+	},
+	{
+		"id" : "light_attack_3",
+		"ground" : 
+		{
+			"hitboxes" : ["light"]
+		},
+		"air" :
+		{
+			"hitboxes" : ["light"]
+		},
+		"input" : "ACTION_LIGHT",
+		"setup" : 140,
+		"stretch" : 0,
+		"accomodation" : 70,
+		"previous" : "light_attack_2"
+	},
+	{
+		"id" : "heavy_attack_side",
+		"ground" : 
+		{
+			"hitboxes" : ["heavy_side", "heavy_side_weak"]
+		},
+		"air" :
+		{
+			"hitboxes" : ["heavy_side", "heavy_side_weak"]
+		},
+		"input" : "ACTION_HEAVY",
+		"setup" : 140,
+		"stretch" : 140,
+		"accomodation" : 70,
+		"direction" : "side"
+	},
+	{
+		"id" : "heavy_attack_down",
+		"ground" : 
+		{
+			"hitboxes" : ["heavy_down", "heavy_down_weak"]
+		},
+		"air" :
+		{
+			"hitboxes" : ["heavy_attack_down_air_fall", "heavy_down", "heavy_down_weak"]
+		},
+		"input" : "ACTION_HEAVY",
+		"setup" : 140,
+		"stretch" : 140,
+		"accomodation" : 70,
+		"direction" : "down"
+	},
+	{
+		"id" : "heavy_attack_up",
+		"ground" : 
+		{
+			"hitboxes" : ["heavy_up", "heavy_up_weak"]
+		},
+		"air" :
+		{
+			"hitboxes" : ["heavy_up_air", "heavy_up_air_weak"]
+		},
+		"input" : "ACTION_HEAVY",
+		"setup" : 140,
+		"stretch" : 140,
+		"accomodation" : 70,
+		"direction" : "up"
+	},
+	{
+		"id" : "expression_1",
+		"ground" : 
+		{
+			"hitboxes" : ["expression_1_weak", "expression_1"]
+		},
+		"air" :
+		{
+			"hitboxes" : ["expression_1_weak", "expression_1"]
+		},
+		"input" : "ACTION_EXPRESSION",
+		"setup" : 660,
+		"stretch" : 0,
+		"accomodation" : 70,
+		"specialLevel" : 1
+	},
+	{
+		"id" : "expression_2",
+		"ground" : 
+		{
+			"hitboxes" : ["expression_2_weak", "expression_2"]
+		},
+		"air" :
+		{
+			"hitboxes" : ["expression_2_weak", "expression_2"]
+		},
+		"input" : "ACTION_EXPRESSION",
+		"setup" : 660,
+		"stretch" : 0,
+		"accomodation" : 70,
+		"specialLevel" : 2
+	},
+	{
+		"id" : "expression_3",
+		"ground" : 
+		{
+			"hitboxes" : ["expression_3_weak", "expression_3"]
+		},
+		"air" :
+		{
+			"hitboxes" : ["expression_3_weak", "expression_3"]
+		},
+		"input" : "ACTION_EXPRESSION",
+		"setup" : 660,
+		"stretch" : 0,
+		"accomodation" : 70,
+		"specialLevel" : 3
+	}
+]

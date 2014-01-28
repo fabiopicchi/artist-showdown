@@ -1,0 +1,174 @@
+[
+	{
+		"id" : "light",
+		"width" : 70,
+		"height" : 33,
+		"xOffset" : 60,
+		"yOffset" : -25,
+		"duration" : 280,
+		"knockbackX" : 1000,
+		"knockbackY" : -1000,
+		"knockbackTime" : 500,
+		"hitStun"  : 250
+	},
+	{
+		"id" : "heavy_side_weak",
+		"width" : 90,
+		"height" : 66,
+		"xOffset" : 70,
+		"yOffset" : -30,
+		"duration" : 70,
+		"knockback" : 0,
+		"hitStun"  : 0
+	},
+	{
+		"id" : "heavy_up_weak",
+		"width" : 100,
+		"height" : 66,
+		"xOffset" : 0,
+		"yOffset" : -90,
+		"duration" : 70,
+		"knockback" : 0,
+		"hitStun"  : 0
+	},
+	{
+		"id" : "heavy_up_air_weak",
+		"width" : 60,
+		"height" : 100,
+		"xOffset" : 0,
+		"yOffset" : -130,
+		"duration" : 140,
+		"knockback" : 0,
+		"hitStun"  : 0
+	},
+	{
+		"id" : "heavy_down_weak",
+		"width" : 130,
+		"height" : 40,
+		"xOffset" : 0,
+		"yOffset" : 43,
+		"duration" : 70,
+		"knockback" : 0,
+		"hitStun"  : 0
+	},
+	{
+		"id" : "heavy_side",
+		"width" : 90,
+		"height" : 66,
+		"xOffset" : 70,
+		"yOffset" : -30,
+		"duration" : 140,
+		"knockback" : 0,
+		"hitStun"  : 0
+	},
+	{
+		"id" : "heavy_up",
+		"width" : 100,
+		"height" : 66,
+		"xOffset" : 0,
+		"yOffset" : -90,
+		"duration" : 140,
+		"knockback" : 0,
+		"hitStun"  : 0
+	},
+	{
+		"id" : "heavy_up_air",
+		"width" : 60,
+		"height" : 100,
+		"xOffset" : 0,
+		"yOffset" : -130,
+		"duration" : 140,
+		"knockback" : 0,
+		"hitStun"  : 0
+	},
+	{
+		"id" : "heavy_down",
+		"width" : 130,
+		"height" : 40,
+		"xOffset" : 0,
+		"yOffset" : 43,
+		"duration" : 140,
+		"knockback" : 0,
+		"hitStun"  : 0
+	},
+	{
+		"id" : "heavy_attack_down_air_fall",
+		"width" : 50,
+		"height" : 40,
+		"xOffset" : 0,
+		"yOffset" : 80,
+		"duration" : -1,
+		"knockback" : 0,
+		"hitStun"  : 0
+	},
+	{
+		"id" : "projectile",
+		"width" : 30,
+		"height" : 15,
+		"xOffset" : 0,
+		"yOffset" : 0,
+		"duration" : -1,
+		"knockback" : 0,
+		"hitStun"  : 0
+	},
+	{
+		"id" : "expression_1_weak",
+		"width" : 160,
+		"height" : 90,
+		"xOffset" : 40,
+		"yOffset" : -40,
+		"duration" : 250,
+		"knockback" : 0,
+		"hitStun"  : 0
+	},
+	{
+		"id" : "expression_2_weak",
+		"width" : 185,
+		"height" : 180,
+		"xOffset" : 42,
+		"yOffset" : -45,
+		"duration" : 250,
+		"knockback" : 0,
+		"hitStun"  : 0
+	},
+	{
+		"id" : "expression_3_weak",
+		"width" : 240,
+		"height" : 230,
+		"xOffset" : 40,
+		"yOffset" : -35,
+		"duration" : 250,
+		"knockback" : 0,
+		"hitStun"  : 0
+	},
+	{
+		"id" : "expression_1",
+		"width" : 160,
+		"height" : 90,
+		"xOffset" : 40,
+		"yOffset" : -40,
+		"duration" : 660,
+		"knockback" : 0,
+		"hitStun"  : 0
+	},
+	{
+		"id" : "expression_2",
+		"width" : 185,
+		"height" : 180,
+		"xOffset" : 42,
+		"yOffset" : -45,
+		"duration" : 660,
+		"knockback" : 0,
+		"hitStun"  : 0
+	},
+	{
+		"id" : "expression_3",
+		"width" : 240,
+		"height" : 230,
+		"xOffset" : 40,
+		"yOffset" : -35,
+		"duration" : 660,
+		"knockback" : 0,
+		"hitStun"  : 0
+	}
+]
