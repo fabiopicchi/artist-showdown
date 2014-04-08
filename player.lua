@@ -298,7 +298,7 @@ Player = utils.inheritsFrom (entity.Entity, function (self, gamepad, character)
         self.hitbox.maxSpeed.y = speed
         self.hitbox.speed.y = speed
         self.flagManager:resetFlag("ATTACK_SETUP")
-
+        self.flagManager:setFlag("ATTACK_METEOR")
     end
 
     self.flagManager:addFlag(
@@ -418,8 +418,8 @@ Player = utils.inheritsFrom (entity.Entity, function (self, gamepad, character)
                 placeAttack (self.attackData.down_0)
                 startAttack ("DOWN")
             end
-        elseif not self.hitbox:wasTouching(hitbox.BOTTOM) and self.hitbox:isTouching (hitbox.BOTTOM) then
-            utils.debug (tostring(self.flagManager:isFlagSet("ATTACK_ACCOMODATION")))
+        elseif self.flagManager:isFlagSet("ATTACK_METEOR") and (not self.hitbox:wasTouching(hitbox.BOTTOM) and self.hitbox:isTouching (hitbox.BOTTOM)) then
+            self.flagManager:resetFlag("ATTACK_METEOR")
             startAttack("DOWN")
         end
     end,
@@ -432,6 +432,7 @@ Player = utils.inheritsFrom (entity.Entity, function (self, gamepad, character)
 
     self.flagManager:addFlag("ATTACK_SETUP")
     self.flagManager:addFlag("ATTACK_CHARGING")
+    self.flagManager:addFlag("ATTACK_METEOR")
     self.flagManager:addFlag("ATTACK_ACCOMODATION")
 
     self.flagManager:addFlag("HITSTUN",
