@@ -1,3 +1,4 @@
+local math = math
 local ipairs = ipairs
 local utils = require "utils"
 local circularBuffer = require "circularBuffer"
@@ -79,17 +80,56 @@ function Gamepad:updateAxis(axis, axisValue)
     self.inputBuffer:head()[axis].value = axisValue
 end
 
+local function axisGT (a, b)
+    if math.abs(a) >= math.abs(b) and a * b >= 0 then
+        return true
+    end
+end
+
+function Gamepad:axisMoved(axis, axisValue, frameTolerance)
+    if not frameTolerance then frameTolerance = 0
+    elseif frameTolerance > self.inputBuffer:size() - 1 then frameTolerance = self.inputBuffer:size() - 1 end    
+
+    for i, state in circularBuffer.iterator(self.inputBuffer, frameTolerance) do
+        if axisGT (state[axis].value, axisValue) then
+            return true
+        end
+    end
+    return false
+end
+
+function Gamepad:axisJustMoved(axis, axisValue, frameTolerance)
+    if not frameTolerance then frameTolerance = 0
+    elseif frameTolerance > self.inputBuffer:size() - 2 then frameTolerance = self.inputBuffer:size() - 2 end
+
+    for i, state in circularBuffer.iterator(self.inputBuffer, frameTolerance) do
+        if axisGT(state[axis].value, axisValue) and not axisGT(self.inputBuffer:element(i - 1)[axis].value, axisValue) then
+            return true
+        end
+    end
+    return false
+end
+
+function Gamepad:axisJustReleased(axis, axisValue, frameTolerance)
+    if not frameTolerance then frameTolerance = 0
+    elseif frameTolerance > self.inputBuffer:size() - 2 then frameTolerance = self.inputBuffer:size() - 2 end
+
+    for i, state in circularBuffer.iterator(self.inputBuffer, frameTolerance) do
+        if not axisGT(state[axis].value, axisValue) and axisGT(self.inputBuffer:element(i - 1)[axis].value, axisValue) then
+            return true
+        end
+    end
+    return false
+end
+
 function Gamepad:buttonPressed(button, frameTolerance)
     if not frameTolerance then frameTolerance = 0
     elseif frameTolerance > self.inputBuffer:size() - 1 then frameTolerance = self.inputBuffer:size() - 1 end    
 
-    for i, state in circularBuffer.iterator(self.inputBuffer) do
+    for i, state in circularBuffer.iterator(self.inputBuffer, frameTolerance) do
         if state[button].pressed then
             return true
         end
-
-        frameTolerance = frameTolerance - 1
-        if frameTolerance < 0 then break end
     end
     return false
 end
@@ -98,13 +138,10 @@ function Gamepad:buttonJustPressed(button, frameTolerance)
     if not frameTolerance then frameTolerance = 0
     elseif frameTolerance > self.inputBuffer:size() - 2 then frameTolerance = self.inputBuffer:size() - 2 end    
 
-    for i, state in circularBuffer.iterator(self.inputBuffer) do
+    for i, state in circularBuffer.iterator(self.inputBuffer, frameTolerance) do
         if state[button].pressed and not self.inputBuffer:element(i - 1)[button].pressed then
             return true
         end
-
-        frameTolerance = frameTolerance - 1
-        if frameTolerance < 0 then break end
     end
     return false
 end
@@ -113,13 +150,10 @@ function Gamepad:buttonJustReleased(button, frameTolerance)
     if not frameTolerance then frameTolerance = 0
     elseif frameTolerance > self.inputBuffer:size() - 2 then frameTolerance = self.inputBuffer:size() - 2 end
 
-    for i, state in circularBuffer.iterator(self.inputBuffer) do
+    for i, state in circularBuffer.iterator(self.inputBuffer, frameTolerance) do
         if not state[button].pressed and self.inputBuffer:element(i - 1)[button].pressed then
             return true
         end
-
-        frameTolerance = frameTolerance - 1
-        if frameTolerance < 0 then break end
     end
     return false
 end
