@@ -28,13 +28,16 @@ function CircularBuffer:head ()
     return self.list[self.headIndex]
 end
 
-function iterator (cB)
+function iterator (cB, range)
     local i = cB.headIndex
-    local size = cB.bufferSize
+    if range == nil then
+        range = cB.bufferSize
+    end
+
     return function ()
-        local currentIndex = ((i - 1) % size) + 1
+        local currentIndex = ((i - 1) % cB.bufferSize) + 1
+        if i >= cB.headIndex - range then
             i = i - 1
-        if i >= cB.headIndex - size then
             return currentIndex, cB.list[currentIndex]
         end
     end
