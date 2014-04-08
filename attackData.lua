@@ -103,7 +103,7 @@ AttackData = utils.defineStruct (function ()
         20,                         -- height
         {x = 0, y = -20},           -- knockback speed
         {x = 0, y = 43},            -- offset position from center
-        6,                          -- setup time in frames
+        4,                          -- setup time in frames
         6,                          -- hitbox duration in seconds
         6),                         -- accomodation in frames
 
@@ -112,7 +112,7 @@ AttackData = utils.defineStruct (function ()
         30,                         -- height
         {x = 0, y = -33},           -- knockback speed
         {x = 0, y = 43},            -- offset position from center
-        6,                          -- setup time in frames
+        4,                          -- setup time in frames
         6,                          -- hitbox duration in seconds
         6)                          -- accomodation in frames
     }
