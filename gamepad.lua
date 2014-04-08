@@ -1,6 +1,6 @@
 local ipairs = ipairs
-local setmetatable = setmetatable
 local utils = require "utils"
+local circularBuffer = require "circularBuffer"
 
 local gamepad = {}
 setfenv (1, gamepad)
@@ -56,69 +56,70 @@ end
 )
 
 Gamepad = utils.defineClass (
-function (self, bufferSize,id)
+function (self, bufferSize, id)
     self.id = id
-    self.bufferSize = bufferSize
-    self.currentStateIndex = 1
-    self.inputBuffer = {}
-    for i = 1, self.bufferSize do
-        self.inputBuffer[i] = GamepadState()
+    local buffer = {}
+    for i = 1, bufferSize do
+        buffer[i] = GamepadState()
     end
+    
+    self.inputBuffer = circularBuffer.CircularBuffer(buffer)
 end
 )
 
 function Gamepad:update()
-    local nextStateIndex = (self.currentStateIndex % self.bufferSize) + 1
-    self.inputBuffer[nextStateIndex], self.currentStateIndex = utils.copyTable(self.inputBuffer[self.currentStateIndex]), nextStateIndex
+    self.inputBuffer:insertElement (utils.copyTable(self.inputBuffer:head()))
 end
 
 function Gamepad:updateButton(button, buttonState)
-    self.inputBuffer[self.currentStateIndex][button].pressed = buttonState
+    self.inputBuffer:head()[button].pressed = buttonState
 end
 
 function Gamepad:updateAxis(axis, axisValue)
-    self.inputBuffer[self.currentStateIndex][axis].value = axisValue
+    self.inputBuffer:head()[axis].value = axisValue
 end
 
 function Gamepad:buttonPressed(button, frameTolerance)
     if not frameTolerance then frameTolerance = 0
-    elseif frameTolerance > self.bufferSize - 1 then frameTolerance = self.bufferSize - 1 end    
+    elseif frameTolerance > self.inputBuffer:size() - 1 then frameTolerance = self.inputBuffer:size() - 1 end    
 
-    for i = self.currentStateIndex, self.currentStateIndex - frameTolerance, -1 do
-        local current = ((i - 1) % self.bufferSize) + 1
-        if self.inputBuffer[current][button].pressed then
+    for i, state in circularBuffer.iterator(self.inputBuffer) do
+        if state[button].pressed then
             return true
         end
+
+        frameTolerance = frameTolerance - 1
+        if frameTolerance < 0 then break end
     end
     return false
 end
 
 function Gamepad:buttonJustPressed(button, frameTolerance)
     if not frameTolerance then frameTolerance = 0
-    elseif frameTolerance > self.bufferSize - 2 then frameTolerance = self.bufferSize - 2 end    
+    elseif frameTolerance > self.inputBuffer:size() - 2 then frameTolerance = self.inputBuffer:size() - 2 end    
 
-    for i = self.currentStateIndex, self.currentStateIndex - frameTolerance, -1 do
-        local current = ((i - 1) % self.bufferSize) + 1
-        local previous = ((i - 2) % self.bufferSize) + 1
-
-        if self.inputBuffer[current][button].pressed and not self.inputBuffer[previous][button].pressed then
+    for i, state in circularBuffer.iterator(self.inputBuffer) do
+        if state[button].pressed and not self.inputBuffer:element(i - 1)[button].pressed then
             return true
         end
+
+        frameTolerance = frameTolerance - 1
+        if frameTolerance < 0 then break end
     end
     return false
 end
 
 function Gamepad:buttonJustReleased(button, frameTolerance)
     if not frameTolerance then frameTolerance = 0
-    elseif frameTolerance > self.bufferSize - 2 then frameTolerance = self.bufferSize - 2 end
+    elseif frameTolerance > self.inputBuffer:size() - 2 then frameTolerance = self.inputBuffer:size() - 2 end
 
-    for i = self.currentStateIndex, self.currentStateIndex - frameTolerance, -1 do
-        local current = ((i - 1) % self.bufferSize) + 1
-        local previous = ((i - 2) % self.bufferSize) + 1
-       
-        if not self.inputBuffer[current][button].pressed and self.inputBuffer[previous][button].pressed then
+    for i, state in circularBuffer.iterator(self.inputBuffer) do
+        if not state[button].pressed and self.inputBuffer:element(i - 1)[button].pressed then
             return true
         end
+
+        frameTolerance = frameTolerance - 1
+        if frameTolerance < 0 then break end
     end
     return false
 end
