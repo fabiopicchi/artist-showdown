@@ -50,11 +50,38 @@ Hitbox = utils.defineClass(function (self, width, height, collisionGroup)
     self.lastTouching = NONE
 end)
 
+local function createHull (h)
+    local delta = {x = h.position.x - h.lastPosition.x, y = h.position.y - h.lastPosition.y}
+    local hull = {}
+    hull.position = {}
+
+    if lt (delta.x, 0) then
+        hull.position.x = h.position.x
+        hull.width = -delta.x + h.width
+    else
+        hull.position.x = h.lastPosition.x
+        hull.width = delta.x + h.width
+    end
+
+    if lt (delta.y, 0) then
+        hull.position.y = h.position.y
+        hull.height = -delta.y + h.height
+    else
+        hull.position.y = h.lastPosition.y
+        hull.height = delta.y + h.height
+    end
+
+    return hull
+end
+
 local function overlapHitboxes (h1, h2, callback)
-    if le (h1.lastPosition.x, h2.position.x + h2.width) and
-    ge (h1.position.x + h1.width, h2.lastPosition.x) and
-    le (h1.lastPosition.y, h2.position.y + h2.height) and
-    ge (h1.position.y + h1.height, h2.lastPosition.y) then
+    local hull1 = createHull (h1)
+    local hull2 = createHull (h2)
+
+    if le (hull1.position.x, hull2.position.x + hull2.width) and
+    ge (hull1.position.x + hull1.width, hull2.position.x) and
+    le (hull1.position.y, hull2.position.y + hull2.height) and
+    ge (hull1.position.y + hull1.height, hull2.position.y) then
         if callback then 
             callback (h1, h2) 
         end
@@ -111,7 +138,7 @@ local function collideHitboxes (h1, h2)
                 xDistance = xDistanceRight
             end
 
-            if le(math.abs(xDistance), math.abs(delta.x)) then toi.x = xDistance / delta.x end
+            if le(math.abs(xDistance), math.abs(delta.x)) then toi.x = math.abs(xDistance / delta.x) end
         end
 
         if not eq(delta.y, 0) then
@@ -121,7 +148,7 @@ local function collideHitboxes (h1, h2)
                 yDistance = yDistanceBottom
             end
 
-            if le (math.abs(yDistance), math.abs(delta.y)) then toi.y = yDistance / delta.y end
+            if le (math.abs(yDistance), math.abs(delta.y)) then toi.y = math.abs(yDistance / delta.y) end
         end
 
         if toi.x > toi.y and lt(h1.position.y, h2.position.y + h2.height) and gt(h1.position.y + h1.height, h2.position.y) then
@@ -150,6 +177,11 @@ local function collideHitboxes (h1, h2)
             h2.touching = h2.touching .. "_" .. BOTTOM
             h1.touching = h1.touching .. "_" .. TOP
         end
+
+        if h1:isTouching(TOP) then
+            utils.debug("TOP")
+        end
+
     end
 end
 
