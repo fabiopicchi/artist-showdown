@@ -1,6 +1,5 @@
 local math = math
 local pairs = pairs
-local tostring = tostring
 local utils = require "utils"
 local shape = require "shape"
 local timer = require "timer"
