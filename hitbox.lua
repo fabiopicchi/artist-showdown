@@ -178,10 +178,6 @@ local function collideHitboxes (h1, h2)
             h1.touching = h1.touching .. "_" .. TOP
         end
 
-        if h1:isTouching(TOP) then
-            utils.debug("TOP")
-        end
-
     end
 end
 
