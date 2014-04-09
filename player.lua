@@ -436,7 +436,12 @@ Player = utils.inheritsFrom (entity.Entity, function (self, gamepad, character)
                     if not self.hitbox:isTouching (hitbox.BOTTOM) then
                         startMeteorAttack (METEOR_SPEED_2)
                     else 
-                        startAttack("DOWN")
+                        self.flagManager:resetFlag("ATTACK_CHARGING")
+                        self.timers["prepareAttack"] = self.timer:start(self.attack.setup, 
+                        function ()
+                            self.flagManager:resetFlag("ATTACK_SETUP")
+                            startAttack("DOWN")
+                        end)
                     end
                 end
             elseif self.chargeTime >= MAX_CHARGE_TIME then
@@ -444,14 +449,24 @@ Player = utils.inheritsFrom (entity.Entity, function (self, gamepad, character)
                 if not self.hitbox:isTouching (hitbox.BOTTOM) then
                     startMeteorAttack (METEOR_SPEED_2)
                 else 
-                    startAttack("DOWN")
+                    self.flagManager:resetFlag("ATTACK_CHARGING")
+                    self.timers["prepareAttack"] = self.timer:start(self.attack.setup, 
+                    function ()
+                        self.flagManager:resetFlag("ATTACK_SETUP")
+                        startAttack("DOWN")
+                    end)
                 end
             elseif self.chargeTime >= MAX_CHARGE_TIME / 2 then
                 placeAttack (self.attackData.down_1)
                 if not self.hitbox:isTouching (hitbox.BOTTOM) then
                     startMeteorAttack (METEOR_SPEED_1)
                 else 
-                    startAttack("DOWN")
+                    self.flagManager:resetFlag("ATTACK_CHARGING")
+                    self.timers["prepareAttack"] = self.timer:start(self.attack.setup, 
+                    function ()
+                        self.flagManager:resetFlag("ATTACK_SETUP")
+                        startAttack("DOWN")
+                    end)
                 end
             else
                 if self.chargeTime >= self.attackData.down_0.setup then
