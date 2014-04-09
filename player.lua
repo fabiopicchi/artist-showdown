@@ -591,6 +591,10 @@ function Player:canBlock()
     return (not self.flagManager:isOneFlagSet({"TAUNT", "DASH", "BLOCK", "ATTACK_LEFT", "ATTACK_RIGHT", "ATTACK_UP", "ATTACK_DOWN", "HITSTUN"}))
 end
 
+function Player:canShortHop()
+    return (self.flagManager:isOneFlagSet({"JUMP", "DOUBLE_JUMP"}) and not self.flagManager:isOneFlagSet({"TAUNT", "FALL", "DASH", "ATTACK_LEFT", "ATTACK_RIGHT", "ATTACK_UP", "ATTACK_DOWN", "BLOCK", "HITSTUN"}))
+end
+
 function Player:update()
     if self:canMove() then
         if self.gamepad:buttonPressed("dpright") or self.gamepad:axisMoved("leftx", 0.5) then
@@ -638,12 +642,8 @@ function Player:update()
         self.flagManager:resetFlag("FALL")
     end
 
-    if self.flagManager:isOneFlagSet({"JUMP", "DOUBLE_JUMP"}) and  
-        not self.flagManager:isFlagSet("FALL") and
-        self.gamepad:buttonJustReleased ("a") then
-        if SHORT_HOP_THRESHOLD > (self.jumpOrigin - self.hitbox.position.y) then
-            self.flagManager:setFlag("SHORT_HOP")
-        end
+    if self:canShortHop() and self.gamepad:buttonJustReleased ("a") and SHORT_HOP_THRESHOLD > (self.jumpOrigin - self.hitbox.position.y) then
+        self.flagManager:setFlag("SHORT_HOP")
     end
 
     if self:canBlock() and self.gamepad:buttonPressed("leftshoulder") then
