@@ -21,10 +21,10 @@ function love.load ()
     leftBlock = addEntity(box.Box(50,570,200,100,{78, 51, 26, 255}))
     rightBlock = addEntity(box.Box(1030,570,200,100,{78, 51, 26, 255}))
 
-    leftPlatform = addEntity(box.Box(50,420,70,30,{78, 51, 26, 255}))
-    rightPlatform = addEntity(box.Box(1160,420,70,30,{78, 51, 26, 255}))
+    leftPlatform = addEntity(box.Box(50,420,70,150,{78, 51, 26, 255}))
+    rightPlatform = addEntity(box.Box(1160,420,70,150,{78, 51, 26, 255}))
 
-    spotPlatform = addEntity(box.Box(440, 240, 400, 30,{78, 51, 26, 255}))
+    spotPlatform = addEntity(box.Box(440, 340, 400, 30,{78, 51, 26, 255}))
 
     players = {}
 
@@ -37,7 +37,7 @@ function love.load ()
     spotlight = entity.Entity ()
     spotlightHitbox = spotlight:addComponent (hitbox.Hitbox (150, 100, "spot"))
     spotlightHitbox.position.x = 565
-    spotlightHitbox.position.y = 140
+    spotlightHitbox.position.y = 240
 
     spotlightGraphic = spotlight:addComponent (image.Image("spotlight.png"))
     spotlightGraphic:setReference (spotlightHitbox.position)
@@ -58,8 +58,6 @@ function love.load ()
        running = false
     end)
 
-    ss1 = love.graphics.newImage("Beard_man_map01.png")
-    ss2 = love.graphics.newImage("Beard_man_map02.png")
 end
 
 function addEntity (entity)
