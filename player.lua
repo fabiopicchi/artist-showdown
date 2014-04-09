@@ -587,6 +587,10 @@ function Player:canTaunt()
     return (not self.flagManager:isOneFlagSet({"TAUNT", "DASH", "BLOCK", "ATTACK_LEFT", "ATTACK_RIGHT", "ATTACK_UP", "ATTACK_DOWN", "HITSTUN", "JUMP", "DOUBLE_JUMP", "FALL"}))
 end
 
+function Player:canBlock()
+    return (not self.flagManager:isOneFlagSet({"TAUNT", "DASH", "BLOCK", "ATTACK_LEFT", "ATTACK_RIGHT", "ATTACK_UP", "ATTACK_DOWN", "HITSTUN"}))
+end
+
 function Player:update()
     if self:canMove() then
         if self.gamepad:buttonPressed("dpright") or self.gamepad:axisMoved("leftx", 0.5) then
@@ -642,13 +646,13 @@ function Player:update()
         end
     end
 
-    if self.gamepad:buttonJustPressed("leftshoulder") then
+    if self:canBlock() and self.gamepad:buttonPressed("leftshoulder") then
         self.flagManager:setFlag("BLOCK")
     elseif self.flagManager:isFlagSet("BLOCKING") and not self.flagManager:isFlagSet("HITSTUN") and not self.gamepad:buttonPressed("leftshoulder") then
         self.flagManager:resetFlag("BLOCK")
     end
 
-    if self:canTaunt() and self.gamepad:axisJustMoved("triggerright", 0.9, 4) and self.gamepad:axisJustMoved("triggerleft", 0.9, 4) then
+    if self:canTaunt() and self.gamepad:axisMoved("triggerright", 0.9, 4) and self.gamepad:axisMoved("triggerleft", 0.9, 4) then
         self.flagManager:setFlag("TAUNT")
     elseif self.flagManager:isFlagSet("TAUNTING") and not (self.gamepad:axisMoved("triggerright", 0.9, 4) and self.gamepad:axisMoved("triggerleft", 0.9, 4)) then
         self.flagManager:resetFlag("TAUNT")
