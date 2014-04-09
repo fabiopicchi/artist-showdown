@@ -44,7 +44,7 @@ Player = utils.inheritsFrom (entity.Entity, function (self, gamepad, character)
     entity.Entity.__constructor (self)
 
     -- Properties
-    self.facing = "left"
+    self.facing = "right"
     self.jumpOrigin = 0
     self.chargeTime = 0
     self.points = 0
@@ -81,7 +81,11 @@ Player = utils.inheritsFrom (entity.Entity, function (self, gamepad, character)
         end
     end 
     self.hitbox.score = function ()
-        self.points = self.points + 1
+        if not self.flagManager:isFlagSet("TAUNTING") then
+            self.points = self.points + 1
+        else
+            self.points = self.points + 5
+        end
     end
 
     self.graphic = self:addComponent(shape.rectangle (WIDTH, HEIGHT, {255, 0, 0, 255}))
