@@ -38,6 +38,7 @@ local ANIMATION_OFFSET_RIGHT_X = -105
 local ANIMATION_OFFSET_LEFT_X = 157
 local ANIMATION_OFFSET_Y = -130
 local BLOCK_DRAG = 1
+local TAUNT_SETUP = 14
 
 Player = utils.inheritsFrom (entity.Entity, function (self, gamepad, character)
     entity.Entity.__constructor (self)
@@ -523,38 +524,55 @@ Player = utils.inheritsFrom (entity.Entity, function (self, gamepad, character)
     nil
     )
 
-    -- self.flagManager:addFlag("TAUNT")
+    self.flagManager:addFlag("TAUNT",
+    nil,
+    function ()
+        self.timers["tauntSetup"] = self.timer:start(TAUNT_SETUP, function ()
+            self.flagManager:setFlag("TAUNTING")
+        end)
+    end,
+    function ()
+        self.flagManager:resetFlag("TAUNTING")
+        self.timer:clear(self.timers["tauntSetup"])
+    end
+    )
+
+    self.flagManager:addFlag("TAUNTING")
+
     -- self.flagManager:addFlag("EXPRESSION")
-    -- self.flagManager:addFlag("KNOCKBACK")
     self.gamepad = self:addComponent(gamepad)
 
 end)
 
 function Player:canMove()
-    return not self.flagManager:isOneFlagSet({"DASH", "BLOCK", "ATTACK_LEFT", "ATTACK_RIGHT", "ATTACK_UP", "ATTACK_DOWN", "HITSTUN"})
+    return (not self.flagManager:isOneFlagSet({"TAUNT", "DASH", "BLOCK", "ATTACK_LEFT", "ATTACK_RIGHT", "ATTACK_UP", "ATTACK_DOWN", "HITSTUN"}))
 end
 
 function Player:canJump()
-    return self.hitbox:isTouching(hitbox.BOTTOM) and not self.flagManager:isOneFlagSet({"DASH", "BLOCK", "ATTACK_LEFT", "ATTACK_RIGHT", "ATTACK_UP", "ATTACK_DOWN", "HITSTUN"})
+    return (self.hitbox:isTouching(hitbox.BOTTOM) and not self.flagManager:isOneFlagSet({"TAUNT", "DASH", "BLOCK", "ATTACK_LEFT", "ATTACK_RIGHT", "ATTACK_UP", "ATTACK_DOWN", "HITSTUN"}))
 end
 
 function Player:canDoubleJump()
-    return not (self.hitbox:isTouching(hitbox.BOTTOM) or self.flagManager:isOneFlagSet({"DOUBLE_JUMP", "DASH", "BLOCK", "ATTACK_LEFT", "ATTACK_RIGHT", "ATTACK_UP", "ATTACK_DOWN", "HITSTUN"}))
+    return not (self.hitbox:isTouching(hitbox.BOTTOM) or self.flagManager:isOneFlagSet({"TAUNT", "DOUBLE_JUMP", "DASH", "BLOCK", "ATTACK_LEFT", "ATTACK_RIGHT", "ATTACK_UP", "ATTACK_DOWN", "HITSTUN"}))
 end
 
 function Player:canDash()
-    return not self.flagManager:isOneFlagSet({"DASH", "DASH_COOLDOWN", "BLOCK", "ATTACK_LEFT", "ATTACK_RIGHT", "ATTACK_UP", "ATTACK_DOWN", "HITSTUN"})
+    return (not self.flagManager:isOneFlagSet({"TAUNT", "DASH", "DASH_COOLDOWN", "BLOCK", "ATTACK_LEFT", "ATTACK_RIGHT", "ATTACK_UP", "ATTACK_DOWN", "HITSTUN"}))
 end
 
 function Player:canAttack()
-    return not (self.flagManager:isOneFlagSet({"DASH", "BLOCK", "ATTACK_LEFT", "ATTACK_RIGHT", "ATTACK_UP", "ATTACK_DOWN", "HITSTUN"}))
+    return (not self.flagManager:isOneFlagSet({"TAUNT", "DASH", "BLOCK", "ATTACK_LEFT", "ATTACK_RIGHT", "ATTACK_UP", "ATTACK_DOWN", "HITSTUN"}))
+end
+
+function Player:canTaunt()
+    return (not self.flagManager:isOneFlagSet({"TAUNT", "DASH", "BLOCK", "ATTACK_LEFT", "ATTACK_RIGHT", "ATTACK_UP", "ATTACK_DOWN", "HITSTUN", "JUMP", "DOUBLE_JUMP", "FALL"}))
 end
 
 function Player:update()
     if self:canMove() then
-        if self.gamepad:buttonPressed("dpright") then
+        if self.gamepad:buttonPressed("dpright") or self.gamepad:axisMoved("leftx", 0.5) then
             self.flagManager:setFlag("MOVING_RIGHT")
-        elseif self.gamepad:buttonPressed("dpleft") then 
+        elseif self.gamepad:buttonPressed("dpleft") or self.gamepad:axisMoved("leftx", -0.5) then 
             self.flagManager:setFlag("MOVING_LEFT")
         else
             self.flagManager:resetFlag("MOVING_RIGHT")
@@ -609,6 +627,12 @@ function Player:update()
         self.flagManager:setFlag("BLOCK")
     elseif self.flagManager:isFlagSet("BLOCKING") and not self.flagManager:isFlagSet("HITSTUN") and not self.gamepad:buttonPressed("leftshoulder") then
         self.flagManager:resetFlag("BLOCK")
+    end
+
+    if self:canTaunt() and self.gamepad:axisJustMoved("triggerright", 0.9, 4) and self.gamepad:axisJustMoved("triggerleft", 0.9, 4) then
+        self.flagManager:setFlag("TAUNT")
+    elseif self.flagManager:isFlagSet("TAUNTING") and not (self.gamepad:axisMoved("triggerright", 0.9, 4) and self.gamepad:axisMoved("triggerleft", 0.9, 4)) then
+        self.flagManager:resetFlag("TAUNT")
     end
 
     entity.Entity.update (self)
@@ -722,6 +746,12 @@ function Player:draw()
         end
     elseif self.flagManager:isFlagSet ("HITSTUN") then
         self.animation:setAnimation ("LAUNCHED")
+    elseif self.flagManager:isFlagSet ("TAUNT") then
+        if self.flagManager:isFlagSet ("TAUNTING") then
+            self.animation:setAnimation ("TAUNT")
+        else
+            self.animation:setAnimation ("TAUNT_SETUP")
+        end
     end
 
     entity.Entity.draw (self)
