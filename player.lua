@@ -36,7 +36,7 @@ local ANIMATION_OFFSET_RIGHT_X = -105
 local ANIMATION_OFFSET_LEFT_X = 157
 local ANIMATION_OFFSET_Y = -130
 local BLOCK_DRAG = 1
-local TAUNT_SETUP = 14
+local TAUNT_SETUP = 18
 
 Player = utils.inheritsFrom (entity.Entity, function (self, gamepad, character)
     entity.Entity.__constructor (self)
