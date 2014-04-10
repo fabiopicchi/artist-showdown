@@ -54,9 +54,9 @@ function love.load ()
     timerEntity = addEntity (entity.Entity())
     timerEntity.timer = timerEntity:addComponent(timer.Timer())
 
-    timerEntity.timer:start(99 * constants.framerate, function ()
-       running = false
-    end)
+    -- timerEntity.timer:start(99 * constants.framerate, function ()
+       -- running = false
+    -- end)
 
 end
 
