@@ -32,8 +32,6 @@ local DASH_SPEED = DASH_LENGTH / DASH_DURATION
 local SHORT_HOP_THRESHOLD = 0.6 * HEIGHT
 local BLOCK_PREPARATION = 5
 local MAX_CHARGE_TIME = 30
-local METEOR_SPEED_1 = 2 * JUMP_SPEED
-local METEOR_SPEED_2 = 3 * JUMP_SPEED
 local ANIMATION_OFFSET_RIGHT_X = -105
 local ANIMATION_OFFSET_LEFT_X = 157
 local ANIMATION_OFFSET_Y = -130
@@ -210,7 +208,8 @@ Player = utils.inheritsFrom (entity.Entity, function (self, gamepad, character)
     end
     )
 
-    self.flagManager:addFlag("INVINCIBLE",
+    self.flagManager:addFlag(
+    "INVINCIBLE",
     nil,
     function ()
         self.timer:start(INVINCIBILITY_DURATION, function () self.flagManager:resetFlag("INVINCIBLE") end)
@@ -246,7 +245,7 @@ Player = utils.inheritsFrom (entity.Entity, function (self, gamepad, character)
 
     self.flagManager:addFlag("BLOCKING")
 
-    local function prepareAttack ()
+    local function prepareAttack (attack)
         self.flagManager:resetFlag("MOVING_LEFT")
         self.flagManager:resetFlag("MOVING_RIGHT")
 
@@ -254,251 +253,193 @@ Player = utils.inheritsFrom (entity.Entity, function (self, gamepad, character)
         self.hitbox.speed.y = JUMP_SPEED / 10
         self.hitbox.acceleration.y = 0
         self.chargeTime = 0
-        self.flagManager:setFlag("ATTACK_SETUP")
-        self.flagManager:setFlag("ATTACK_CHARGING")
-    end
 
-    local function placeAttack (attackComponent)
-        self.attack = self:addComponent(attackComponent)
-        -- self.attackGraphic = self:addComponent(attackComponent.graphic)
-    end
-
-    local function removeAttack ()
-        if self.attack then
-            self:removeComponent(self.attack)
-            -- self:removeComponent(self.attackGraphic)
-            self.attack = nil
-            -- self.attackGraphic = nil
-        end
-    end
-
-    local function endAttack (dir)
-        self.flagManager:setFlag("ATTACK_ACCOMODATION")
-        self.timer:start(self.attack.accomodation, function ()
-            self.flagManager:resetFlag("ATTACK_" .. dir)
-        end)
-        self.flagManager:resetFlag("ATTACK_SETUP")
-        removeAttack ()
+        self.attack = attack
+        self.flagManager:setFlag("ATTACK_CHARGE_SETUP")
     end
 
     local function interruptAttack ()
-        self.timer:clear (self.timers["endAttack"])
-        self.timer:clear (self.timers["prepareAttack"])
+        self.timer:clear (self.timers["chargeStup"])
+        self.timer:clear (self.timers["attackSetup"])
+        self.timer:clear (self.timers["attackDuration"])
+        self.timer:clear (self.timers["attackAccomodation"])
+
         self.hitbox.acceleration.y = GRAVITY
         self.hitbox.maxSpeed.y = JUMP_SPEED
-        self.flagManager:resetFlag("ATTACK_SETUP")
-        self.flagManager:resetFlag("ATTACK_METEOR")
+
+        self.flagManager:resetFlag("ATTACK_CHARGE_SETUP")
         self.flagManager:resetFlag("ATTACK_CHARGING")
+        self.flagManager:resetFlag("ATTACK_SETUP")
+        self.flagManager:resetFlag("ATTACKING_METEOR")
+        self.flagManager:resetFlag("ATTACKING")
         self.flagManager:resetFlag("ATTACK_ACCOMODATION")
-        removeAttack()
-    end
-
-    local function startAttack (dir)
-        self.timers["endAttack"] = self.timer:start(self.attack.duration, 
-        function ()
-            endAttack (dir)
-        end)
-        self.flagManager:resetFlag("ATTACK_SETUP")
-        self.flagManager:resetFlag("ATTACK_CHARGING")
-    end
-
-    local function startMeteorAttack (speed)
-        self.flagManager:resetFlag("ATTACK_CHARGING")
-        self.timers["prepareAttack"] = self.timer:start(self.attack.setup, 
-        function ()
-            self.flagManager:resetFlag("ATTACK_SETUP")
-            self.flagManager:setFlag("ATTACK_METEOR")
-            self.hitbox.speed.y = speed
-            self.hitbox.maxSpeed.y = speed
-        end)
+        
+        self:removeComponent (self.attackHitbox)
+        self.attack = nil
+        self.attackHitbox = nil
     end
 
     self.flagManager:addFlag(
-    "ATTACK_LEFT",
+    "ATTACK_CHARGE_SETUP",
+    nil,
     function ()
-        if self.flagManager:isFlagSet("ATTACK_CHARGING") then
-            if self.gamepad:buttonPressed("x") then 
-                self.chargeTime = self.chargeTime + 1
-                if self.chargeTime >= 3 * MAX_CHARGE_TIME / 2 then
-                    placeAttack (self.attackData.left_2)
-                    startAttack ("LEFT")
-                end
-            elseif self.chargeTime >= MAX_CHARGE_TIME then
-                placeAttack (self.attackData.left_2)
-                startAttack ("LEFT")
-            elseif self.chargeTime >= MAX_CHARGE_TIME / 2 then
-                placeAttack (self.attackData.left_1)
-                startAttack ("LEFT")
-            else
-                if self.chargeTime >= self.attackData.left_0.setup then
-                    placeAttack (self.attackData.left_0)
-                    startAttack ("LEFT")
-                else
-                    self.flagManager:resetFlag("ATTACK_CHARGING")
-                    self.timers["prepareAttack"] = self.timer:start(self.attackData.left_0.setup - self.chargeTime,
-                    function ()
-                        placeAttack (self.attackData.left_0)
-                        startAttack ("LEFT")
-                    end)
-                end
+        self.timers["chargeSetup"] = self.timer:start(self.attack.chargeSetup, function ()
+            self.flagManager:resetFlag("ATTACK_CHARGE_SETUP")
+            self.flagManager:setFlag("ATTACK_CHARGING")
+        end)
+    end,
+    nil
+    )
+
+    self.flagManager:addFlag(
+    "ATTACK_CHARGING",
+    function ()
+        if self.gamepad:buttonPressed(self.attack.button) then 
+            self.chargeTime = self.chargeTime + 1
+            if self.chargeTime >= 3 * MAX_CHARGE_TIME / 2 then
+                self.flagManager:resetFlag("ATTACK_CHARGING")
+                self.flagManager:setFlag("ATTACK_SETUP")
             end
+        else
+            self.flagManager:resetFlag("ATTACK_CHARGING")
+            self.flagManager:setFlag("ATTACK_SETUP")
         end
     end,
+    function ()
+        if not self.gamepad:buttonPressed(self.attack.button) then 
+            self.flagManager:resetFlag("ATTACK_CHARGING")
+            self.flagManager:setFlag("ATTACK_SETUP")
+        end
+    end,
+    nil
+    )
+
+    self.flagManager:addFlag(
+    "ATTACK_SETUP",
+    nil,
+    function ()
+        if self.attack.direction ~= "DOWN" or self.hitbox:isTouching(hitbox.BOTTOM) then
+            if self.chargeTime >= MAX_CHARGE_TIME then
+                self.attackHitbox = self.attack:getHitbox (2)
+            elseif self.chargeTime >= MAX_CHARGE_TIME / 2 then
+                self.attackHitbox = self.attack:getHitbox (1)
+            else
+                self.attackHitbox = self.attack:getHitbox (0)
+            end
+        else
+            if self.chargeTime >= MAX_CHARGE_TIME then
+                self.attackHitbox = self.attack:getHitbox (2, true)
+            elseif self.chargeTime >= MAX_CHARGE_TIME / 2 then
+                self.attackHitbox = self.attack:getHitbox (1, true)
+            else
+                self.attackHitbox = self.attack:getHitbox (0)
+            end
+
+        end
+
+        self.timers["attackSetup"] = self.timer:start(self.attackHitbox.setup, function ()
+            self.flagManager:resetFlag("ATTACK_SETUP")
+            if self.attackHitbox.meteor then
+                self.flagManager:setFlag("ATTACKING_METEOR")
+            else
+                self.flagManager:setFlag("ATTACKING")
+            end
+        end)
+    end,
+    nil
+    )
+
+    self.flagManager:addFlag(
+    "ATTACKING_METEOR",
+    function ()
+        if not self.hitbox:wasTouching(hitbox.BOTTOM) and self.hitbox:isTouching (hitbox.BOTTOM) then
+            self.flagManager:resetFlag("ATTACKING_METEOR")
+            self:removeComponent (self.attackHitbox)
+
+            if self.chargeTime >= MAX_CHARGE_TIME then
+                self.attackHitbox = self.attack:getHitbox(2)
+            elseif self.chargeTime >= MAX_CHARGE_TIME / 2 then
+                self.attackHitbox = self.attack:getHitbox(1)
+            else
+                self.attackHitbox = self.attack:getHitbox(0)
+            end
+
+            self.flagManager:setFlag("ATTACKING")
+        end
+    end,
+    function ()
+        self:addComponent (self.attackHitbox)
+        self.hitbox.speed.y = self.attackHitbox.meteorSpeed
+        self.hitbox.maxSpeed.y = self.attackHitbox.meteorSpeed
+    end,
+    nil
+    )
+
+    self.flagManager:addFlag(
+    "ATTACKING",
+    nil,
+    function ()
+        self:addComponent (self.attackHitbox)
+        self.timers["attackDuration"] = self.timer:start(self.attackHitbox.duration, function ()
+            self.flagManager:setFlag("ATTACK_ACCOMODATION")
+            self.flagManager:resetFlag("ATTACKING")
+        end)
+    end,
+    nil
+    )
+
+    self.flagManager:addFlag(
+    "ATTACK_ACCOMODATION",
+    nil,
+    function ()
+        self.timers["attackAccomodation"] = self.timer:start(self.attackHitbox.accomodation, function ()
+            self.flagManager:resetFlag("ATTACK_" .. self.attack.direction)
+        end)
+    end,
+    nil
+    )
+
+    self.flagManager:addFlag(
+    "ATTACK_LEFT",
+    nil,
     function ()
         self.facing = "left"
         self.animation.scale.x = -1
         self.animation.x = ANIMATION_OFFSET_LEFT_X
-        prepareAttack()
+        prepareAttack(self.attackData.left)
     end,
     interruptAttack)
 
     self.flagManager:addFlag(
     "ATTACK_RIGHT",
-    function ()
-        if self.flagManager:isFlagSet("ATTACK_CHARGING") then
-            if self.gamepad:buttonPressed("b") then 
-                self.chargeTime = self.chargeTime + 1
-                if self.chargeTime >= 3 * MAX_CHARGE_TIME / 2 then
-                    placeAttack (self.attackData.right_2)
-                    startAttack ("RIGHT")
-                end
-            elseif self.chargeTime >= MAX_CHARGE_TIME then
-                placeAttack (self.attackData.right_2)
-                startAttack ("RIGHT")
-            elseif self.chargeTime >= MAX_CHARGE_TIME / 2 then
-                placeAttack (self.attackData.right_1)
-                startAttack ("RIGHT")
-            else
-                if self.chargeTime >= self.attackData.right_0.setup then
-                    placeAttack (self.attackData.right_0)
-                    startAttack ("RIGHT")
-                else
-                    self.flagManager:resetFlag("ATTACK_CHARGING")
-                    self.timers["prepareAttack"] = self.timer:start(self.attackData.right_0.setup - self.chargeTime,
-                    function ()
-                        placeAttack (self.attackData.right_0)
-                        startAttack ("RIGHT")
-                    end)
-                end
-            end
-        end
-    end,
+    nil,
     function ()
         self.facing = "right"
         self.animation.scale.x = 1
         self.animation.x = ANIMATION_OFFSET_RIGHT_X
-        prepareAttack()
+        prepareAttack(self.attackData.right)
     end,
     interruptAttack)
 
     self.flagManager:addFlag(
     "ATTACK_UP",
+    nil,
     function ()
-        if self.flagManager:isFlagSet("ATTACK_CHARGING") then
-            if self.gamepad:buttonPressed("y") then 
-                self.chargeTime = self.chargeTime + 1
-                if self.chargeTime >= 3 * MAX_CHARGE_TIME / 2 then
-                    placeAttack (self.attackData.up_2)
-                    startAttack ("UP")
-                end
-            elseif self.chargeTime >= MAX_CHARGE_TIME then
-                placeAttack (self.attackData.up_2)
-                startAttack ("UP")
-            elseif self.chargeTime >= MAX_CHARGE_TIME / 2 then
-                placeAttack (self.attackData.up_1)
-                startAttack ("UP")
-            else
-                if self.chargeTime >= self.attackData.up_0.setup then
-                    placeAttack (self.attackData.up_0)
-                    startAttack ("UP")
-                else
-                    self.flagManager:resetFlag("ATTACK_CHARGING")
-                    self.timers["prepareAttack"] = self.timer:start(self.attackData.up_0.setup - self.chargeTime,
-                    function ()
-                        placeAttack (self.attackData.up_0)
-                        startAttack ("UP")
-                    end)
-                end
-            end
-        end
+        prepareAttack(self.attackData.up)
     end,
-    prepareAttack,
     interruptAttack)
 
     self.flagManager:addFlag(
     "ATTACK_DOWN",
+    nil,
     function ()
-        if self.flagManager:isFlagSet("ATTACK_CHARGING") then
-            if self.gamepad:buttonPressed("a") then 
-                self.chargeTime = self.chargeTime + 1
-                if self.chargeTime >= 3 * MAX_CHARGE_TIME / 2 then
-                    placeAttack (self.attackData.down_2)
-                    if not self.hitbox:isTouching (hitbox.BOTTOM) then
-                        startMeteorAttack (METEOR_SPEED_2)
-                    else 
-                        self.flagManager:resetFlag("ATTACK_CHARGING")
-                        self.timers["prepareAttack"] = self.timer:start(self.attack.setup, 
-                        function ()
-                            self.flagManager:resetFlag("ATTACK_SETUP")
-                            startAttack("DOWN")
-                        end)
-                    end
-                end
-            elseif self.chargeTime >= MAX_CHARGE_TIME then
-                placeAttack (self.attackData.down_2)
-                if not self.hitbox:isTouching (hitbox.BOTTOM) then
-                    startMeteorAttack (METEOR_SPEED_2)
-                else 
-                    self.flagManager:resetFlag("ATTACK_CHARGING")
-                    self.timers["prepareAttack"] = self.timer:start(self.attack.setup, 
-                    function ()
-                        self.flagManager:resetFlag("ATTACK_SETUP")
-                        startAttack("DOWN")
-                    end)
-                end
-            elseif self.chargeTime >= MAX_CHARGE_TIME / 2 then
-                placeAttack (self.attackData.down_1)
-                if not self.hitbox:isTouching (hitbox.BOTTOM) then
-                    startMeteorAttack (METEOR_SPEED_1)
-                else 
-                    self.flagManager:resetFlag("ATTACK_CHARGING")
-                    self.timers["prepareAttack"] = self.timer:start(self.attack.setup, 
-                    function ()
-                        self.flagManager:resetFlag("ATTACK_SETUP")
-                        startAttack("DOWN")
-                    end)
-                end
-            else
-                if self.chargeTime >= self.attackData.down_0.setup then
-                    placeAttack (self.attackData.down_0)
-                    startAttack ("DOWN")
-                else
-                    self.flagManager:resetFlag("ATTACK_CHARGING")
-                    self.timers["prepareAttack"] = self.timer:start(self.attackData.down_0.setup - self.chargeTime,
-                    function ()
-                        placeAttack (self.attackData.down_0)
-                        startAttack ("DOWN")
-                    end)
-                end
-            end
-        elseif self.flagManager:isFlagSet("ATTACK_METEOR") and (not self.hitbox:wasTouching(hitbox.BOTTOM) and self.hitbox:isTouching (hitbox.BOTTOM)) then
-            self.flagManager:resetFlag("ATTACK_METEOR")
-            startAttack("DOWN")
-        end
+        prepareAttack(self.attackData.down)
     end,
-    prepareAttack,
-    function ()
-        interruptAttack()
-        self.hitbox.maxSpeed.y = JUMP_SPEED
-    end
+    interruptAttack
     )
 
-    self.flagManager:addFlag("ATTACK_SETUP")
-    self.flagManager:addFlag("ATTACK_CHARGING")
-    self.flagManager:addFlag("ATTACK_METEOR")
-    self.flagManager:addFlag("ATTACK_ACCOMODATION")
-
-    self.flagManager:addFlag("HITSTUN",
+    self.flagManager:addFlag(
+    "HITSTUN",
     function ()
         if not self.hitbox:wasTouching(hitbox.BOTTOM) and self.hitbox:isTouching(hitbox.BOTTOM) then
             self.hitbox.acceleration.x = self.hitbox.speed.x > 0 and -BLOCK_DRAG or BLOCK_DRAG
@@ -543,7 +484,8 @@ Player = utils.inheritsFrom (entity.Entity, function (self, gamepad, character)
     nil
     )
 
-    self.flagManager:addFlag("TAUNT",
+    self.flagManager:addFlag(
+    "TAUNT",
     nil,
     function ()
         self.timers["tauntSetup"] = self.timer:start(TAUNT_SETUP, function ()
@@ -680,6 +622,17 @@ function Player:draw()
         self.animation:setAnimation ("DASH")
     elseif self.flagManager:isFlagSet ("BLOCK") then
         self.animation:setAnimation ("BLOCK")
+
+    elseif self.flagManager:isFlagSet ("ATTACK_CHARGE_SETUP") then
+        if self.flagManager:isOneFlagSet ({"ATTACK_LEFT", "ATTACK_RIGHT"}) then
+            self.animation:setAnimation ("ATTACK_CHARGE_HOR_0")
+        elseif self.flagManager:isFlagSet ("ATTACK_UP") then
+            self.animation:setAnimation ("ATTACK_CHARGE_UP_0")
+        else
+            self.animation:setAnimation ("ATTACK_CHARGE_DOWN_0")
+        end
+
+
     elseif self.flagManager:isFlagSet ("ATTACK_CHARGING") then
         if self.flagManager:isOneFlagSet ({"ATTACK_LEFT", "ATTACK_RIGHT"}) then
             if self.chargeTime >= MAX_CHARGE_TIME then
@@ -706,6 +659,7 @@ function Player:draw()
                 self.animation:setAnimation ("ATTACK_CHARGE_DOWN_0")
             end
         end
+
     elseif self.flagManager:isFlagSet ("ATTACK_SETUP") then
         if self.flagManager:isOneFlagSet ({"ATTACK_LEFT", "ATTACK_RIGHT"}) then
             if self.chargeTime >= MAX_CHARGE_TIME then
@@ -732,41 +686,42 @@ function Player:draw()
                 self.animation:setAnimation ("ATTACK_SETUP_DOWN_0")
             end
         end
-    elseif self.flagManager:isOneFlagSet ({"ATTACK_LEFT", "ATTACK_RIGHT"}) then
-        if self.chargeTime >= MAX_CHARGE_TIME then
-            self.animation:setAnimation ("ATTACK_HOR_2")
-        elseif self.chargeTime >= MAX_CHARGE_TIME / 2 then
-            self.animation:setAnimation ("ATTACK_HOR_1")
-        else
-            self.animation:setAnimation ("ATTACK_HOR_0")
-        end
-    elseif self.flagManager:isFlagSet ("ATTACK_UP") then
-        if self.chargeTime >= MAX_CHARGE_TIME then
-            self.animation:setAnimation ("ATTACK_UP_2")
-        elseif self.chargeTime >= MAX_CHARGE_TIME / 2 then
-            self.animation:setAnimation ("ATTACK_UP_1")
-        else
-            self.animation:setAnimation ("ATTACK_UP_0")
-        end
-    elseif self.flagManager:isFlagSet ("ATTACK_DOWN") then
-        if self.hitbox:isTouching(hitbox.BOTTOM) then
+    
+    elseif self.flagManager:isFlagSet ("ATTACKING") then
+        if self.flagManager:isOneFlagSet ({"ATTACK_LEFT", "ATTACK_RIGHT"}) then
             if self.chargeTime >= MAX_CHARGE_TIME then
-                self.animation:setAnimation ("ATTACK_DOWN_GROUND")
+                self.animation:setAnimation ("ATTACK_HOR_2")
             elseif self.chargeTime >= MAX_CHARGE_TIME / 2 then
-                self.animation:setAnimation ("ATTACK_DOWN_GROUND")
+                self.animation:setAnimation ("ATTACK_HOR_1")
             else
-                self.animation:setAnimation ("ATTACK_DOWN_0")
+                self.animation:setAnimation ("ATTACK_HOR_0")
             end
-        else
+        elseif self.flagManager:isFlagSet ("ATTACK_UP") then
             if self.chargeTime >= MAX_CHARGE_TIME then
-                self.animation:setAnimation ("ATTACK_DOWN_LOOP_2")
+                self.animation:setAnimation ("ATTACK_UP_2")
             elseif self.chargeTime >= MAX_CHARGE_TIME / 2 then
-                self.animation:setAnimation ("ATTACK_DOWN_LOOP_1")
+                self.animation:setAnimation ("ATTACK_UP_1")
             else
-                self.animation:setAnimation ("ATTACK_DOWN_0")
+                self.animation:setAnimation ("ATTACK_UP_0")
             end
+        elseif self.flagManager:isFlagSet ("ATTACK_DOWN") then
+            if not self.flagManager:isFlagSet ("ATTACKING_METEOR") then
+                if self.chargeTime >= MAX_CHARGE_TIME then
+                    self.animation:setAnimation ("ATTACK_DOWN_GROUND")
+                elseif self.chargeTime >= MAX_CHARGE_TIME / 2 then
+                    self.animation:setAnimation ("ATTACK_DOWN_GROUND")
+                else
+                    self.animation:setAnimation ("ATTACK_DOWN_0")
+                end
+            else
+                if self.chargeTime >= MAX_CHARGE_TIME then
+                    self.animation:setAnimation ("ATTACK_DOWN_LOOP_2")
+                elseif self.chargeTime >= MAX_CHARGE_TIME / 2 then
+                    self.animation:setAnimation ("ATTACK_DOWN_LOOP_1")
+                end
+            end
+        end
 
-        end
     elseif self.flagManager:isFlagSet ("HITSTUN") then
         self.animation:setAnimation ("LAUNCHED")
     elseif self.flagManager:isFlagSet ("TAUNT") then

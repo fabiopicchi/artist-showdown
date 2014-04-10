@@ -1,11 +1,12 @@
 local hitbox = require "hitbox"
 local shape = require "shape"
 local utils = require "utils"
+local love = love
 
-local attackHitbox = {}
-setfenv (1, attackHitbox)
+local attack = {}
+setfenv (1, attack)
 
-AttackHitbox = utils.inheritsFrom (hitbox.Hitbox, function (self, width, height, knockback, offset, setup, duration, accomodation)
+AttackHitbox = utils.inheritsFrom (hitbox.Hitbox, function (self, width, height, knockback, offset, setup, duration, accomodation, meteorSpeed)
     hitbox.Hitbox.__constructor (self, width, height, "attack")
 
     self.knockback = knockback
@@ -13,7 +14,14 @@ AttackHitbox = utils.inheritsFrom (hitbox.Hitbox, function (self, width, height,
     self.setup = setup
     self.duration = duration
     self.accomodation = accomodation
-    
+
+    if meteorSpeed then  
+        self.meteor = true
+        self.meteorSpeed = meteorSpeed
+    else            
+        self.meteor = false
+    end
+
     self.graphic = shape.rectangle (self.width, self.height, {0, 255, 0, 255})
     self.graphic:setReference (self.position)
 end)
@@ -32,4 +40,23 @@ function AttackHitbox:update ()
     hitbox.Hitbox.update(self)
 end
 
-return attackHitbox
+function AttackHitbox:draw ()
+    -- self.graphic:draw()
+end
+
+Attack = utils.defineClass (function (self, attackHitboxList, direction, button, chargeSetup)
+    self.hitboxList = attackHitboxList
+    self.direction = direction
+    self.button = button
+    self.chargeSetup = chargeSetup
+end)
+
+function Attack:getHitbox (chargeLevel, meteor)
+    if not meteor then
+        return self.hitboxList[chargeLevel]
+    else
+        return self.hitboxList["meteor_" .. chargeLevel]
+    end
+end
+
+return attack
