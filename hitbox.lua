@@ -138,7 +138,7 @@ local function collideHitboxes (h1, h2)
                 xDistance = xDistanceRight
             end
 
-            if le(math.abs(xDistance), math.abs(delta.x)) then toi.x = math.abs(xDistance / delta.x) end
+            if le(math.abs(xDistance), math.abs(delta.x)) then toi.x = xDistance / delta.x end
         end
 
         if not eq(delta.y, 0) then
@@ -148,18 +148,21 @@ local function collideHitboxes (h1, h2)
                 yDistance = yDistanceBottom
             end
 
-            if le (math.abs(yDistance), math.abs(delta.y)) then toi.y = math.abs(yDistance / delta.y) end
+            if le (math.abs(yDistance), math.abs(delta.y)) then toi.y = yDistance / delta.y end
         end
 
-        if toi.x > toi.y and lt(h1.position.y, h2.position.y + h2.height) and gt(h1.position.y + h1.height, h2.position.y) then
+        if gt (toi.x, toi.y) and lt(h1.position.y, h2.position.y + h2.height) and gt(h1.position.y + h1.height, h2.position.y) then
             h1.position.x = h1.lastPosition.x + xDistance
             h1.speed.x = 0
             h2.speed.x = 0
-        elseif toi.x < toi.y and lt(h1.position.x, h2.position.x + h2.width) and gt(h1.position.x + h1.width, h2.position.x) then
+        elseif lt (toi.x, toi.y) and lt(h1.position.x, h2.position.x + h2.width) and gt(h1.position.x + h1.width, h2.position.x) then
             h1.position.y = h1.lastPosition.y + yDistance
             h1.speed.y = 0
             h2.speed.y = 0
-        elseif eq (toi.x, -1) then
+        elseif eq (toi.x, toi.y) and not eq (toi.x, -1) then
+            h1.position.y = h1.lastPosition.y + yDistance
+            h1.speed.y = 0
+            h2.speed.y = 0
         end
 
         if eq (h1.position.x + h1.width, h2.position.x) and ge(delta.x, 0) then
