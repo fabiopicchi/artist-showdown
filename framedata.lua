@@ -175,25 +175,25 @@ local animations = {
 }
 
 Player_1 = {
-    imgFile = "band_default_A.png",
+    imgFile = "assets/images/characters/bandman_proto/band_A.png",
     frames = frames,
     animations = animations
 }
 
 Player_2 = {
-    imgFile = "band_default_B.png",
+    imgFile = "assets/images/characters/bandman_proto/band_B.png",
     frames = frames,
     animations = animations
 }
 
 Player_3 = {
-    imgFile = "band_default_C.png",
+    imgFile = "assets/images/characters/bandman_proto/band_C.png",
     frames = frames,
     animations = animations
 }
 
 Player_4 = {
-    imgFile = "band_default_D.png",
+    imgFile = "assets/images/characters/bandman_proto/band_D.png",
     frames = frames,
     animations = animations
 }
