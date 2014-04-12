@@ -12,10 +12,11 @@ function rectangle (width, height, color)
     s.width = width
     s.height = height
     s.color = color
+    s.scale = {x = 1, y = 1}
 
     s.draw = function (self)
         love.graphics.setColor (unpack(self.color))
-        love.graphics.rectangle ("fill", self.reference.x + self.x, self.reference.y + self.y, self.width, self.height)
+        love.graphics.rectangle ("fill", self.reference.x + self.x, self.reference.y + self.y, self.width * s.scale.x, self.height * s.scale.y)
     end
 
     return s
