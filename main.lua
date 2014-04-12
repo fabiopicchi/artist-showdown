@@ -16,7 +16,7 @@ function love.load ()
     love.window.setMode(constants.screenWidth, constants.screenHeight)
     
     bg = addEntity (entity.Entity())
-    bg:addComponent (image.Image("onemanband2.jpg"))
+    bg:addComponent (image.Image("assets/images/levels/onemanband2.jpg"))
 
     leftBlock = addEntity(box.Box(50,570,200,100,{78, 51, 26, 255}))
     rightBlock = addEntity(box.Box(1030,570,200,100,{78, 51, 26, 255}))
@@ -39,7 +39,7 @@ function love.load ()
     spotlightHitbox.position.x = 565
     spotlightHitbox.position.y = 240
 
-    spotlightGraphic = spotlight:addComponent (image.Image("spotlight.png"))
+    spotlightGraphic = spotlight:addComponent (image.Image("assets/images/levels/spotlight.png"))
     spotlightGraphic:setReference (spotlightHitbox.position)
     spotlightGraphic.x = - (spotlightGraphic.img:getWidth() - spotlightHitbox.width) / 2 + 65
     spotlightGraphic.y = - spotlightGraphic.img:getHeight() + spotlightHitbox.height + 30
