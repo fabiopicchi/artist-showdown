@@ -34,8 +34,6 @@ function love.run()
     local curentFrameTime = 0
     local elapsedTime = 0
 
-    running = true;
-
     -- Main loop time.
     while true do
         -- Update dt, as we'll be passing it to update
@@ -60,10 +58,14 @@ function love.run()
         end
 
         -- Call update and draw
-        if running and love.update then love.update() end -- will pass 0 if love.timer is disabled
+        if love.update then love.update() end -- will pass 0 if love.timer is disabled
         
         for i, gamepad in ipairs(gamepads) do
             gamepad:update()
+        end
+
+        if currentContext.endGame then
+            break
         end
 
         if love.window and love.graphics and love.window.isCreated() then

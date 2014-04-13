@@ -85,7 +85,7 @@ MenuContext = utils.inheritsFrom (context.Context, function (self)
 
             end,
             function ()
-
+                self.endGame = true
             end
         }),
         {
