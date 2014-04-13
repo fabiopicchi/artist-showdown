@@ -1,5 +1,6 @@
 local utils = require "utils"
 local entity = require "entity"
+local love = love
 
 local listMenu = {}
 setfenv(1, listMenu)
@@ -34,16 +35,38 @@ ListMenu = utils.inheritsFrom(entity.Entity, function (self, menu, assets, marke
 
     self:addComponent(self.marker)
     updateMarker (self)
+
+    self.select = love.audio.newSource("assets/sound/sfx/menu_accept.ogg")
+    self.side = love.audio.newSource("assets/sound/sfx/menu_side.ogg")
 end)
+
+function ListMenu:update ()
+    entity.Entity.update (self)
+
+    if self.gamepad then
+        if self.gamepad:buttonJustPressed("dpup") then
+            self:moveUp()
+        elseif self.gamepad:buttonJustPressed("dpdown") then
+            self:moveDown()
+        elseif self.gamepad:buttonJustPressed("a") then
+            self.menu:selectOption()
+        end
+    end
+
+    updateMarker(self)
+end
+
 
 function ListMenu:moveDown ()
     self.menu:nextOption()
     updateMarker (self)
+    love.audio.play(self.side)
 end
 
 function ListMenu:moveUp ()
     self.menu:previousOption()
     updateMarker (self)
+    love.audio.play(self.side)
 end
 
 return listMenu

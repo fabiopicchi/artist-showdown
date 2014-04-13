@@ -1,4 +1,6 @@
 local math = math
+local love = love
+
 local utils = require "utils"
 local entity = require "entity"
 
@@ -25,6 +27,9 @@ CircularMenu = utils.inheritsFrom(entity.Entity, function (self, menu, assets, c
     end
 
     self:updateElements()
+    
+    self.select = love.audio.newSource("assets/sound/sfx/menu_accept.ogg")
+    self.side = love.audio.newSource("assets/sound/sfx/menu_side.ogg")
 end)
 
 function CircularMenu:moveRight ()
@@ -32,12 +37,22 @@ function CircularMenu:moveRight ()
     self.nextPosition = self.nextPosition - 1
     self.positionIncrement = (self.nextPosition - self.position) / TWEEN_TIME
     self:updateElements()
+    love.audio.play(self.side)
 end
 
 function CircularMenu:moveLeft ()
     self.menu:previousOption()
     self.nextPosition = self.nextPosition + 1
     self.positionIncrement = (self.nextPosition - self.position) / TWEEN_TIME
+    self:updateElements()
+    love.audio.play(self.side)
+end
+
+
+function CircularMenu:selectOption (opt)
+    self.nextPosition = opt
+    self.menu:gotoOption(opt)
+    self.positionIncrement = (self.nextPosition - self.position)
     self:updateElements()
 end
 
@@ -57,6 +72,18 @@ function CircularMenu:updateElements ()
 end
 
 function CircularMenu:update ()
+    entity.Entity.update(self)
+
+    if self.gamepad then
+        if self.gamepad:buttonJustPressed("dpleft") then
+            self:moveLeft()
+        elseif self.gamepad:buttonJustPressed("dpright") then
+            self:moveRight()
+        elseif self.gamepad:buttonJustPressed("a") then
+            self.menu:selectOption()
+        end
+    end
+
     if (self.position < self.nextPosition and self.positionIncrement > 0) or (self.position > self.nextPosition and self.positionIncrement < 0) then
         self.position = self.position + self.positionIncrement
         self:updateElements()
