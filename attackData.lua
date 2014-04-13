@@ -109,7 +109,7 @@ AttackData = utils.defineStruct (function ()
             [1] = attack.AttackHitbox (
             45,                         -- width
             20,                         -- height
-            {x = 0, y = 20},            -- knockback speed
+            {x = 0, y = -20},            -- knockback speed
             {x = 0, y = 43},            -- offset position from center
             4,                          -- setup time in frames
             6,                          -- hitbox duration in seconds
@@ -118,7 +118,7 @@ AttackData = utils.defineStruct (function ()
             [2] = attack.AttackHitbox (
             60,                         -- width
             30,                         -- height
-            {x = 0, y = 33},            -- knockback speed
+            {x = 0, y = -33},            -- knockback speed
             {x = 0, y = 43},            -- offset position from center
             4,                          -- setup time in frames
             6,                          -- hitbox duration in seconds
@@ -127,7 +127,7 @@ AttackData = utils.defineStruct (function ()
             meteor_1 = attack.AttackHitbox (
             32,                         -- width
             20,                         -- height
-            {x = 0, y = 10},            -- knockback speed
+            {x = 0, y = 15},            -- knockback speed
             {x = 0, y = 43},            -- offset position from center
             4,                          -- setup time in frames
             6,                          -- hitbox duration in seconds
