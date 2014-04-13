@@ -1,5 +1,7 @@
 local math = math
+local love = love
 local pairs = pairs
+
 local utils = require "utils"
 local shape = require "shape"
 local timer = require "timer"
@@ -38,6 +40,34 @@ local ANIMATION_OFFSET_Y = -130
 local BLOCK_DRAG = 1
 local TAUNT_SETUP = 18
 
+local hitSounds = {
+    love.audio.newSource ("assets/sound/sfx/hit_01.ogg"),    
+    love.audio.newSource ("assets/sound/sfx/hit_02.ogg"),    
+    love.audio.newSource ("assets/sound/sfx/hit_03.ogg")
+}
+
+local heavyHitSounds = {
+    love.audio.newSource ("assets/sound/sfx/heavyhit_01.ogg"),    
+    love.audio.newSource ("assets/sound/sfx/heavyhit_02.ogg")
+}
+
+local dashSounds = {
+    love.audio.newSource ("assets/sound/sfx/dash.ogg")
+}
+
+local attackSounds = {
+    love.audio.newSource ("assets/sound/sfx/attack_woosh.ogg")
+}
+
+local landingSounds = {
+    love.audio.newSource ("assets/sound/sfx/land.ogg")
+}
+
+local hitWallSounds = {
+    love.audio.newSource ("assets/sound/sfx/hit_wall_01.ogg"),
+    love.audio.newSource ("assets/sound/sfx/hit_wall_02.ogg")
+}
+
 Player = utils.inheritsFrom (entity.Entity, function (self, gamepad, character)
     entity.Entity.__constructor (self)
 
@@ -74,6 +104,12 @@ Player = utils.inheritsFrom (entity.Entity, function (self, gamepad, character)
             self.activeHitboxes[attackHitbox] = true
             self.hitbox.speed.x = attackHitbox.knockback.x
             self.hitbox.speed.y = attackHitbox.knockback.y
+
+            if attackHitbox.parent.chargeTime >= MAX_CHARGE_TIME then
+                love.audio.play (heavyHitSounds[love.math.random(1, #heavyHitSounds)])
+            else
+                love.audio.play (hitSounds[love.math.random(1, #hitSounds)])
+            end
 
             self.flagManager:setFlag("HITSTUN")
         end
@@ -192,6 +228,7 @@ Player = utils.inheritsFrom (entity.Entity, function (self, gamepad, character)
         end)
     end,
     function ()
+        love.audio.play (dashSounds[1])
         self.timer:clear(self.timers["dash"])
         self.timer:clear(self.timers["invincible"])
         self.hitbox.speed.x = 0
@@ -318,6 +355,7 @@ Player = utils.inheritsFrom (entity.Entity, function (self, gamepad, character)
     "ATTACK_SETUP",
     nil,
     function ()
+        love.audio.play(attackSounds[1])
         if self.attack.direction ~= "DOWN" or self.hitbox:isTouching(hitbox.BOTTOM) then
             if self.chargeTime >= MAX_CHARGE_TIME then
                 self.attackHitbox = self.attack:getHitbox (2)
@@ -445,6 +483,11 @@ Player = utils.inheritsFrom (entity.Entity, function (self, gamepad, character)
             self.hitbox.acceleration.x = self.hitbox.speed.x > 0 and -BLOCK_DRAG or BLOCK_DRAG
         end
 
+        if (not self.hitbox:wasTouching(hitbox.LEFT) and self.hitbox:isTouching(hitbox.LEFT)) or
+            (not self.hitbox:wasTouching(hitbox.RIGHT) and self.hitbox:isTouching(hitbox.RIGHT)) then
+            love.audio.play(hitWallSounds[love.math.random(1, #hitWallSounds)])
+        end
+
         if self.hitbox.acceleration.x ~= 0 and (self.hitbox.acceleration.x * self.hitbox.speed.x >= 0 or not self.hitbox:isTouching(hitbox.BOTTOM)) then
             self.hitbox.speed.x = 0
             self.hitbox.acceleration.x = 0
@@ -501,7 +544,7 @@ Player = utils.inheritsFrom (entity.Entity, function (self, gamepad, character)
     self.flagManager:addFlag("TAUNTING")
 
     -- self.flagManager:addFlag("EXPRESSION")
-    self.gamepad = self:addComponent(gamepad)
+    self.gamepad = gamepad
 
 end)
 
@@ -538,66 +581,72 @@ function Player:canShortHop()
 end
 
 function Player:update()
-    if self:canMove() then
-        if self.gamepad:buttonPressed("dpright") or self.gamepad:axisMoved("leftx", 0.5) then
-            self.flagManager:setFlag("MOVING_RIGHT")
-        elseif self.gamepad:buttonPressed("dpleft") or self.gamepad:axisMoved("leftx", -0.5) then 
-            self.flagManager:setFlag("MOVING_LEFT")
+    if self.gamepad then
+        if self:canMove() then
+            if self.gamepad:buttonPressed("dpright") or self.gamepad:axisMoved("leftx", 0.5) then
+                self.flagManager:setFlag("MOVING_RIGHT")
+            elseif self.gamepad:buttonPressed("dpleft") or self.gamepad:axisMoved("leftx", -0.5) then 
+                self.flagManager:setFlag("MOVING_LEFT")
+            else
+                self.flagManager:resetFlag("MOVING_RIGHT")
+                self.flagManager:resetFlag("MOVING_LEFT")
+            end
+        end
+
+        if self:canAttack () then
+            if self.gamepad:buttonJustPressed("x", 4) then
+                self.flagManager:setFlag("ATTACK_LEFT")
+            elseif self.gamepad:buttonJustPressed("y", 4) then
+                self.flagManager:setFlag("ATTACK_UP")
+            elseif self.gamepad:buttonJustPressed("b", 4) then
+                self.flagManager:setFlag("ATTACK_RIGHT")
+            elseif self.flagManager:isFlagSet("DOUBLE_JUMP") and self.gamepad:buttonJustPressed("a") then
+                self.flagManager:setFlag("ATTACK_DOWN")
+            end
+        end
+
+        if self:canDash() and self.gamepad:buttonJustPressed("rightshoulder", 4) then 
+            self.flagManager:setFlag("DASH")
+        end
+
+        if self.hitbox:isTouching(hitbox.BOTTOM) then
+            self.flagManager:resetFlag("DOUBLE_JUMP")
+            self.flagManager:resetFlag("JUMP")
+        end
+
+        if self:canJump() and self.gamepad:buttonJustPressed("a", 4) then
+            self.flagManager:setFlag("JUMP")
+        end
+
+        if self:canDoubleJump() and self.gamepad:buttonJustPressed("a") then
+            self.flagManager:setFlag("DOUBLE_JUMP")
+        end
+
+        if self.hitbox.speed.y > 0 then
+            self.flagManager:setFlag("FALL")
         else
-            self.flagManager:resetFlag("MOVING_RIGHT")
-            self.flagManager:resetFlag("MOVING_LEFT")
+            self.flagManager:resetFlag("FALL")
+        end
+
+        if self:canShortHop() and self.gamepad:buttonJustReleased ("a") and SHORT_HOP_THRESHOLD > (self.jumpOrigin - self.hitbox.position.y) then
+            self.flagManager:setFlag("SHORT_HOP")
+        end
+
+        if self:canBlock() and self.gamepad:buttonPressed("leftshoulder") then
+            self.flagManager:setFlag("BLOCK")
+        elseif self.flagManager:isFlagSet("BLOCKING") and not self.flagManager:isFlagSet("HITSTUN") and not self.gamepad:buttonPressed("leftshoulder") then
+            self.flagManager:resetFlag("BLOCK")
+        end
+
+        if self:canTaunt() and self.gamepad:axisMoved("triggerright", 0.9, 4) and self.gamepad:axisMoved("triggerleft", 0.9, 4) then
+            self.flagManager:setFlag("TAUNT")
+        elseif self.flagManager:isFlagSet("TAUNTING") and not (self.gamepad:axisMoved("triggerright", 0.9, 4) and self.gamepad:axisMoved("triggerleft", 0.9, 4)) then
+            self.flagManager:resetFlag("TAUNT")
         end
     end
 
-    if self:canAttack () then
-        if self.gamepad:buttonJustPressed("x", 4) then
-            self.flagManager:setFlag("ATTACK_LEFT")
-        elseif self.gamepad:buttonJustPressed("y", 4) then
-            self.flagManager:setFlag("ATTACK_UP")
-        elseif self.gamepad:buttonJustPressed("b", 4) then
-            self.flagManager:setFlag("ATTACK_RIGHT")
-        elseif self.flagManager:isFlagSet("DOUBLE_JUMP") and self.gamepad:buttonJustPressed("a") then
-            self.flagManager:setFlag("ATTACK_DOWN")
-        end
-    end
-
-    if self:canDash() and self.gamepad:buttonJustPressed("rightshoulder", 4) then 
-        self.flagManager:setFlag("DASH")
-    end
-
-    if self.hitbox:isTouching(hitbox.BOTTOM) then
-        self.flagManager:resetFlag("DOUBLE_JUMP")
-        self.flagManager:resetFlag("JUMP")
-    end
-
-    if self:canJump() and self.gamepad:buttonJustPressed("a", 4) then
-        self.flagManager:setFlag("JUMP")
-    end
-
-    if self:canDoubleJump() and self.gamepad:buttonJustPressed("a") then
-        self.flagManager:setFlag("DOUBLE_JUMP")
-    end
-
-    if self.hitbox.speed.y > 0 then
-        self.flagManager:setFlag("FALL")
-    else
-        self.flagManager:resetFlag("FALL")
-    end
-
-    if self:canShortHop() and self.gamepad:buttonJustReleased ("a") and SHORT_HOP_THRESHOLD > (self.jumpOrigin - self.hitbox.position.y) then
-        self.flagManager:setFlag("SHORT_HOP")
-    end
-
-    if self:canBlock() and self.gamepad:buttonPressed("leftshoulder") then
-        self.flagManager:setFlag("BLOCK")
-    elseif self.flagManager:isFlagSet("BLOCKING") and not self.flagManager:isFlagSet("HITSTUN") and not self.gamepad:buttonPressed("leftshoulder") then
-        self.flagManager:resetFlag("BLOCK")
-    end
-
-    if self:canTaunt() and self.gamepad:axisMoved("triggerright", 0.9, 4) and self.gamepad:axisMoved("triggerleft", 0.9, 4) then
-        self.flagManager:setFlag("TAUNT")
-    elseif self.flagManager:isFlagSet("TAUNTING") and not (self.gamepad:axisMoved("triggerright", 0.9, 4) and self.gamepad:axisMoved("triggerleft", 0.9, 4)) then
-        self.flagManager:resetFlag("TAUNT")
+    if not self.hitbox:wasTouching(hitbox.BOTTOM) and self.hitbox:isTouching(hitbox.BOTTOM) then
+        love.audio.play(landingSounds[1])
     end
 
     entity.Entity.update (self)
@@ -686,7 +735,7 @@ function Player:draw()
                 self.animation:setAnimation ("ATTACK_SETUP_DOWN_0")
             end
         end
-    
+
     elseif self.flagManager:isFlagSet ("ATTACKING") then
         if self.flagManager:isOneFlagSet ({"ATTACK_LEFT", "ATTACK_RIGHT"}) then
             if self.chargeTime >= MAX_CHARGE_TIME then
