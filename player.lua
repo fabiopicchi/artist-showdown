@@ -85,6 +85,9 @@ Player = utils.inheritsFrom (entity.Entity, function (self, gamepad, character)
     -- Components
     self.flagManager = self:addComponent(flagManager.FlagManager())
     
+    -- Timer
+    self.timer = self:addComponent(timer.Timer())
+    
     -- Hitbox
     self.hitbox = self:addComponent(hitbox.Hitbox(50, 100, "player"))
     self.hitbox.position.x, self.hitbox.position.y = 100, 100
@@ -130,8 +133,6 @@ Player = utils.inheritsFrom (entity.Entity, function (self, gamepad, character)
     self.animation.y = ANIMATION_OFFSET_Y
     self.animation:setReference (self.hitbox.position)
     self.animation:setAnimation ("IDLE")
-
-    self.timer = self:addComponent(timer.Timer())
 
     self.flagManager:addFlag(
     "MOVING_LEFT",
@@ -304,6 +305,8 @@ Player = utils.inheritsFrom (entity.Entity, function (self, gamepad, character)
         self.hitbox.acceleration.y = GRAVITY
         self.hitbox.maxSpeed.y = JUMP_SPEED
 
+        if self.attackHitbox then self:removeComponent (self.attackHitbox) end
+
         self.flagManager:resetFlag("ATTACK_CHARGE_SETUP")
         self.flagManager:resetFlag("ATTACK_CHARGING")
         self.flagManager:resetFlag("ATTACK_SETUP")
@@ -311,7 +314,6 @@ Player = utils.inheritsFrom (entity.Entity, function (self, gamepad, character)
         self.flagManager:resetFlag("ATTACKING")
         self.flagManager:resetFlag("ATTACK_ACCOMODATION")
         
-        self:removeComponent (self.attackHitbox)
         self.attack = nil
         self.attackHitbox = nil
     end
@@ -377,7 +379,7 @@ Player = utils.inheritsFrom (entity.Entity, function (self, gamepad, character)
 
         self.timers["attackSetup"] = self.timer:start(self.attackHitbox.setup, function ()
             self.flagManager:resetFlag("ATTACK_SETUP")
-            if self.attackHitbox.meteor then
+            if self.attackHitbox.meteor and not self.hitbox:isTouching (hitbox.BOTTOM) then
                 self.flagManager:setFlag("ATTACKING_METEOR")
             else
                 self.flagManager:setFlag("ATTACKING")
@@ -500,17 +502,14 @@ Player = utils.inheritsFrom (entity.Entity, function (self, gamepad, character)
         end
     end,
     function ()
-
         if self.flagManager:isFlagSet ("BLOCKING") then
             self.hitbox.speed.x = self.hitbox.speed.x / 2
             self.hitbox.acceleration.x = self.hitbox.speed.x > 0 and -BLOCK_DRAG or BLOCK_DRAG
             self.hitbox.speed.y = 0
         end
 
-        if not self.hitbox:wasTouching(hitbox.BOTTOM) and self.hitbox:isTouching(hitbox.BOTTOM) then
-            if self.hitbox.speed.y > 0 then
-                self.hitbox.speed.y = -self.hitbox.speed.y/2
-            end
+        if self.hitbox:isTouching(hitbox.BOTTOM) and self.hitbox.speed.y > 0 then
+            self.hitbox.speed.y = -self.hitbox.speed.y * 2
         end
 
         if self.hitbox.speed.x > 0 then
@@ -522,7 +521,6 @@ Player = utils.inheritsFrom (entity.Entity, function (self, gamepad, character)
             self.animation.scale.x = 1
             self.animation.x = ANIMATION_OFFSET_RIGHT_X
         end
-
     end,
     nil
     )
@@ -736,7 +734,14 @@ function Player:draw()
             end
         end
 
+    elseif self.flagManager:isFlagSet ("ATTACKING_METEOR") then
+        if self.chargeTime >= MAX_CHARGE_TIME then
+            self.animation:setAnimation ("ATTACK_DOWN_LOOP_2")
+        elseif self.chargeTime >= MAX_CHARGE_TIME / 2 then
+            self.animation:setAnimation ("ATTACK_DOWN_LOOP_1")
+        end
     elseif self.flagManager:isFlagSet ("ATTACKING") then
+
         if self.flagManager:isOneFlagSet ({"ATTACK_LEFT", "ATTACK_RIGHT"}) then
             if self.chargeTime >= MAX_CHARGE_TIME then
                 self.animation:setAnimation ("ATTACK_HOR_2")
@@ -754,20 +759,12 @@ function Player:draw()
                 self.animation:setAnimation ("ATTACK_UP_0")
             end
         elseif self.flagManager:isFlagSet ("ATTACK_DOWN") then
-            if not self.flagManager:isFlagSet ("ATTACKING_METEOR") then
-                if self.chargeTime >= MAX_CHARGE_TIME then
-                    self.animation:setAnimation ("ATTACK_DOWN_GROUND")
-                elseif self.chargeTime >= MAX_CHARGE_TIME / 2 then
-                    self.animation:setAnimation ("ATTACK_DOWN_GROUND")
-                else
-                    self.animation:setAnimation ("ATTACK_DOWN_0")
-                end
+            if self.chargeTime >= MAX_CHARGE_TIME then
+                self.animation:setAnimation ("ATTACK_DOWN_GROUND")
+            elseif self.chargeTime >= MAX_CHARGE_TIME / 2 then
+                self.animation:setAnimation ("ATTACK_DOWN_GROUND")
             else
-                if self.chargeTime >= MAX_CHARGE_TIME then
-                    self.animation:setAnimation ("ATTACK_DOWN_LOOP_2")
-                elseif self.chargeTime >= MAX_CHARGE_TIME / 2 then
-                    self.animation:setAnimation ("ATTACK_DOWN_LOOP_1")
-                end
+                self.animation:setAnimation ("ATTACK_DOWN_0")
             end
         end
 
