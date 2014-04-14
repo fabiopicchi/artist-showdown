@@ -102,7 +102,8 @@ Player = utils.inheritsFrom (entity.Entity, function (self, gamepad, character)
             self.flagManager:resetFlag ("ATTACK_DOWN")
             self.flagManager:resetFlag ("ATTACK_UP")
             self.flagManager:resetFlag ("DASH")
-            self.flagManager:resetFlag("HITSTUN")
+            self.flagManager:resetFlag ("HITSTUN")
+            self.flagManager:resetFlag ("TAUNT")
 
             self.activeHitboxes[attackHitbox] = true
             self.hitbox.speed.x = attackHitbox.knockback.x
@@ -529,6 +530,8 @@ Player = utils.inheritsFrom (entity.Entity, function (self, gamepad, character)
     "TAUNT",
     nil,
     function ()
+        self.flagManager:resetFlag("MOVING_LEFT")
+        self.flagManager:resetFlag("MOVING_RIGHT")
         self.timers["tauntSetup"] = self.timer:start(TAUNT_SETUP, function ()
             self.flagManager:setFlag("TAUNTING")
         end)
