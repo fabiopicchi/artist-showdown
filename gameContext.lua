@@ -49,6 +49,8 @@ GameContext = utils.inheritsFrom (context.Context, function (self, nPlayers)
     local rightWall = self:addEntity(box.Box(1230,50,50,620))
 
 
+    self.running = true
+
 end)
 
 
@@ -69,14 +71,13 @@ function GameContext:init()
 
     timerEntity = self:addEntity (entity.Entity())
     timerEntity.timer = timerEntity:addComponent(timer.Timer())
-    self.running = true
     timerEntity.timer:start(99 * constants.framerate, function ()
         self.running = false
     end)
 end
 
 function GameContext:update()
-    if not self.running then
+    if self.running then
         context.Context.update(self)
         hitbox.collide ("player", "wall")
         hitbox.overlap ("player", "attack", 
