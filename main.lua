@@ -4,6 +4,7 @@ local gamepad = require "gamepad"
 
 function love.load ()
     -- Screen size
+    love.audio.setVolume(0)
     love.window.setMode(constants.screenWidth, constants.screenHeight)
     setContext(menuContext.MenuContext())
 end
