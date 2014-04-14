@@ -1,3 +1,7 @@
+local table = table
+
+local constants = require "constants"
+local timer = require "timer"
 local utils = require "utils"
 local hitbox = require "hitbox"
 local context = require "context"
@@ -6,6 +10,7 @@ local box = require "box"
 local entity = require "entity"
 local player = require "player"
 local love = love
+local playerHUD = require "playerHUD"
 
 local gameContext = {}
 setfenv (1, gameContext)
@@ -43,12 +48,7 @@ GameContext = utils.inheritsFrom (context.Context, function (self, nPlayers)
     local downWall = self:addEntity(box.Box(50,670,1230,50))
     local rightWall = self:addEntity(box.Box(1230,50,50,620))
 
-    -- timerEntity = addEntity (entity.Entity())
-    -- timerEntity.timer = timerEntity:addComponent(timer.Timer())
 
-    -- timerEntity.timer:start(99 * constants.framerate, function ()
-       -- running = false
-    -- end)
 end)
 
 
@@ -56,7 +56,9 @@ function GameContext:init()
     self.players = {}
 
     for i = 1, self.nPlayers do
-        self.players = self:addEntity(player.Player(self.gamepads[i], "Player_" .. i))
+        local player = self:addEntity(player.Player(self.gamepads[i], "Player_" .. i))
+        table.insert(self.players, player)
+        self:addEntity (playerHUD.PlayerHUD(i, player))
     end
 
     love.audio.stop()
@@ -64,26 +66,42 @@ function GameContext:init()
     local bgMusic = love.audio.newSource("assets/sound/songs/Polka.mp3")
     bgMusic:setLooping(true)
     love.audio.play(bgMusic)
+
+    timerEntity = self:addEntity (entity.Entity())
+    timerEntity.timer = timerEntity:addComponent(timer.Timer())
+    self.running = true
+    timerEntity.timer:start(99 * constants.framerate, function ()
+        self.running = false
+    end)
 end
 
 function GameContext:update()
-    context.Context.update(self)
-
-    hitbox.collide ("player", "wall")
-    hitbox.overlap ("player", "attack", 
+    if not self.running then
+        context.Context.update(self)
+        hitbox.collide ("player", "wall")
+        hitbox.overlap ("player", "attack", 
         function (a, b)
             if a.parent ~= b.parent then
                 a.hitCallback (b)
             end
         end)
-    hitbox.overlap ("player", "spot",
+        hitbox.overlap ("player", "spot",
         function (a, b)
             a.score ()
         end)
+    end
 end
 
 function GameContext:draw()
-    context.Context.draw(self)
+    if not self.running then
+        for i = 1, #self.players do
+            love.graphics.setNewFont(30)
+            love.graphics.setColor(0, 255, 0, 255)
+            love.graphics.print ("Player " .. i .. ": " .. self.players[i].points, 100, 100 + 50 * i)
+        end
+    else
+        context.Context.draw(self)
+    end
 end
 
 return gameContext

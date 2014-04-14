@@ -114,7 +114,7 @@ MenuContext = utils.inheritsFrom (context.Context, function (self)
         {
             image.Image ("assets/images/menu/2p.png"),
             image.Image ("assets/images/menu/3p.png"),
-            image.Image ("assets/images/menu/4p.png"),
+            image.Image ("assets/images/menu/4p.png")
         },
         image.Image("assets/images/menu/bolinha.png"),
         {x = 640, y = 460}, 10, 10)

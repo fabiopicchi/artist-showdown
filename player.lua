@@ -125,8 +125,8 @@ Player = utils.inheritsFrom (entity.Entity, function (self, gamepad, character)
         end
     end
 
-    self.graphic = self:addComponent(shape.rectangle (WIDTH, HEIGHT, {255, 0, 0, 255}))
-    self.graphic:setReference (self.hitbox.position)
+    --self.graphic = self:addComponent(shape.rectangle (WIDTH, HEIGHT, {255, 0, 0, 255}))
+    --self.graphic:setReference (self.hitbox.position)
 
     self.animation = self:addComponent(animation.Animation(self.framedata.imgFile, self.framedata.frames, self.framedata.animations))
     self.animation.x = ANIMATION_OFFSET_RIGHT_X
@@ -251,10 +251,10 @@ Player = utils.inheritsFrom (entity.Entity, function (self, gamepad, character)
     nil,
     function ()
         self.timer:start(INVINCIBILITY_DURATION, function () self.flagManager:resetFlag("INVINCIBLE") end)
-        self.graphic.color = {255, 255, 255, 255}
+        --self.graphic.color = {255, 255, 255, 255}
     end,
     function ()
-        self.graphic.color = {255, 0, 0, 255}
+        --self.graphic.color = {255, 0, 0, 255}
     end
     )
 
@@ -269,13 +269,13 @@ Player = utils.inheritsFrom (entity.Entity, function (self, gamepad, character)
         self.hitbox.speed.y = 0
 
         self.timers["startBlock"] = self.timer:start(BLOCK_PREPARATION, function ()
-            self.graphic.color = {255, 0, 255, 255}
+            --self.graphic.color = {255, 0, 255, 255}
 
             self.flagManager:setFlag("BLOCKING")
         end)
     end,
     function ()
-        self.graphic.color = {255, 0, 0, 255}
+        --self.graphic.color = {255, 0, 0, 255}
         self.flagManager:resetFlag("BLOCKING")
         self.timer:clear(self.timers["startBlock"])
     end
@@ -297,7 +297,7 @@ Player = utils.inheritsFrom (entity.Entity, function (self, gamepad, character)
     end
 
     local function interruptAttack ()
-        self.timer:clear (self.timers["chargeStup"])
+        self.timer:clear (self.timers["chargeSetup"])
         self.timer:clear (self.timers["attackSetup"])
         self.timer:clear (self.timers["attackDuration"])
         self.timer:clear (self.timers["attackAccomodation"])

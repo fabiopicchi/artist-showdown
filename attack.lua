@@ -41,7 +41,7 @@ function AttackHitbox:update ()
 end
 
 function AttackHitbox:draw ()
-    self.graphic:draw()
+    --self.graphic:draw()
 end
 
 Attack = utils.defineClass (function (self, attackHitboxList, direction, button, chargeSetup)
