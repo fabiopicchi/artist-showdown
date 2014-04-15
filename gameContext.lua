@@ -11,6 +11,7 @@ local entity = require "entity"
 local player = require "player"
 local love = love
 local playerHUD = require "playerHUD"
+local particleSystem = require "particleSystem"
 
 local gameContext = {}
 setfenv (1, gameContext)
@@ -41,6 +42,11 @@ GameContext = utils.inheritsFrom (context.Context, function (self, nPlayers)
     spotlightGraphic.x = - (spotlightGraphic.img:getWidth() - spotlightHitbox.width) / 2 + 65
     spotlightGraphic.y = - spotlightGraphic.img:getHeight() + spotlightHitbox.height + 30
 
+	self.spotEmitter = particleSystem.ParticleSystem ("assets.particles.particle_spot", image.Image("assets/particles/ticles_shine.png").img)
+	spotlight: addComponent(self.spotEmitter)
+	self.spotEmitter.y = -65
+	self.spotEmitter: stop()
+	
     self:addEntity (spotlight)
 
     local upWall = self:addEntity(box.Box(0,0,1280,50))
@@ -88,6 +94,7 @@ function GameContext:update()
         end)
         hitbox.overlap ("player", "spot",
         function (a, b)
+			self.spotEmitter:start()
             a.score ()
         end)
     end

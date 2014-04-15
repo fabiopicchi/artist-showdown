@@ -11,6 +11,7 @@ local framedata = require "framedata"
 local animation = require "animation"
 local attackData = require "attackData"
 local flagManager = require "flagManager"
+local particleSystem = require "particleSystem"
 
 local player = {}
 setfenv (1, player)
@@ -470,13 +471,20 @@ Player = utils.inheritsFrom (entity.Entity, function (self, gamepad, character)
     end,
     interruptAttack)
 
+	--self.downattEmitter = particleSystem.ParticleSystem ("assets.particles.bandman_downatt", image.Image("assets/particles/ticles_note.png").img)
+	--player: addComponent(self.downattEmitter)
+	--self.downattEmitter.y = 40
+	--self.downattEmitter: stop()
+	
     self.flagManager:addFlag(
     "ATTACK_DOWN",
     nil,
     function ()
         prepareAttack(self.attackData.down)
+		--self.downattEmitter:start()
     end,
     interruptAttack
+	--self.downattEmitter:stop()
     )
 
     self.flagManager:addFlag(
@@ -525,7 +533,7 @@ Player = utils.inheritsFrom (entity.Entity, function (self, gamepad, character)
     end,
     nil
     )
-
+	
     self.flagManager:addFlag(
     "TAUNT",
     nil,

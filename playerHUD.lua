@@ -1,6 +1,7 @@
 local utils = require "utils"
 local entity = require "entity"
 local image = require "image"
+local particleSystem = require "particleSystem"
 
 local playerHUD = {}
 setfenv (1, playerHUD)
@@ -19,6 +20,16 @@ local lightImage1 = image.Image("assets/images/ui/p1_luz.png")
 local lightImage2 = image.Image("assets/images/ui/p2_luz.png")
 local lightImage3 = image.Image("assets/images/ui/p3_luz.png")
 local lightImage4 = image.Image("assets/images/ui/p4_luz.png")
+
+local hudEmitter1 = particleSystem.ParticleSystem ("assets.particles.particle_hud1", image.Image("assets/particles/ticles_shine.png").img)
+local hudEmitter2 = particleSystem.ParticleSystem ("assets.particles.particle_hud2", image.Image("assets/particles/ticles_shine.png").img)
+local hudEmitter3 = particleSystem.ParticleSystem ("assets.particles.particle_hud3", image.Image("assets/particles/ticles_shine.png").img)
+local hudEmitter4 = particleSystem.ParticleSystem ("assets.particles.particle_hud4", image.Image("assets/particles/ticles_shine.png").img)
+
+hudEmitter1:stop()
+hudEmitter2:stop()
+hudEmitter3:stop()
+hudEmitter4:stop()
 
 local barPosition1 = {x = 99, y = 35}
 local barPosition2 = {x = 126, y = 35} 
