@@ -579,19 +579,19 @@ Player = utils.inheritsFrom (entity.Entity, function (self, gamepad, character)
     self:addComponent(self.charge1)
     self.charge1:setReference (self.hitbox.position)
     self.charge1.x = WIDTH / 2 - 5
-    self.spotEmitter.y = HEIGHT / 2 - 10
+    self.charge1.y = HEIGHT / 2 - 50
 
     self.charge2 = particleSystem.ParticleSystem ("assets.particles.charge_steam_02", image.Image("assets/particles/ticles_smoke.png").img)
     self:addComponent(self.charge2)
     self.charge2:setReference (self.hitbox.position)
     self.charge2.x = WIDTH / 2 - 5
-    self.charge2.y = HEIGHT / 2 - 10
+    self.charge2.y = HEIGHT / 2 - 50
 
     self.charge3 = particleSystem.ParticleSystem ("assets.particles.charge_steam_03", image.Image("assets/particles/ticles_smoke.png").img)
     self:addComponent(self.charge3)
     self.charge3:setReference (self.hitbox.position)
     self.charge3.x = WIDTH / 2 - 5
-    self.charge3.y = HEIGHT / 2 - 10
+    self.charge3.y = HEIGHT / 2 - 50
 end)
 
 function Player:canMove()
