@@ -342,6 +342,21 @@ Player = utils.inheritsFrom (entity.Entity, function (self, gamepad, character)
             if self.chargeTime >= 3 * MAX_CHARGE_TIME / 2 then
                 self.flagManager:resetFlag("ATTACK_CHARGING")
                 self.flagManager:setFlag("ATTACK_SETUP")
+
+            elseif self.chargeTime > MAX_CHARGE_TIME then
+                if not self.charge3.ps:isActive() then
+                    self.charge3:start()
+                    self.charge2:stop()
+                end
+            elseif self.chargeTime > MAX_CHARGE_TIME / 2 then
+                if not self.charge2.ps:isActive() then
+                    self.charge2:start()
+                    self.charge1:stop()
+                end
+            else
+                if not self.charge1.ps:isActive() then
+                    self.charge1:start()
+                end
             end
         else
             self.flagManager:resetFlag("ATTACK_CHARGING")
@@ -354,7 +369,11 @@ Player = utils.inheritsFrom (entity.Entity, function (self, gamepad, character)
             self.flagManager:setFlag("ATTACK_SETUP")
         end
     end,
-    nil
+    function ()
+        self.charge3:stop()
+        self.charge2:stop()
+        self.charge1:stop()
+    end
     )
 
     self.flagManager:addFlag(
@@ -556,23 +575,23 @@ Player = utils.inheritsFrom (entity.Entity, function (self, gamepad, character)
     self.spotEmitter.x = WIDTH / 2 - 5
     self.spotEmitter.y = HEIGHT / 2 - 10
 
-    self.spotEmitter = particleSystem.ParticleSystem ("assets.particles.particle_spot", image.Image("assets/particles/ticles_shine.png").img)
-    self:addComponent(self.spotEmitter)
-    self.spotEmitter:setReference (self.hitbox.position)
-    self.spotEmitter.x = WIDTH / 2 - 5
+    self.charge1 = particleSystem.ParticleSystem ("assets.particles.charge_steam_01", image.Image("assets/particles/ticles_smoke.png").img)
+    self:addComponent(self.charge1)
+    self.charge1:setReference (self.hitbox.position)
+    self.charge1.x = WIDTH / 2 - 5
     self.spotEmitter.y = HEIGHT / 2 - 10
 
-    self.spotEmitter = particleSystem.ParticleSystem ("assets.particles.particle_spot", image.Image("assets/particles/ticles_shine.png").img)
-    self:addComponent(self.spotEmitter)
-    self.spotEmitter:setReference (self.hitbox.position)
-    self.spotEmitter.x = WIDTH / 2 - 5
-    self.spotEmitter.y = HEIGHT / 2 - 10
+    self.charge2 = particleSystem.ParticleSystem ("assets.particles.charge_steam_02", image.Image("assets/particles/ticles_smoke.png").img)
+    self:addComponent(self.charge2)
+    self.charge2:setReference (self.hitbox.position)
+    self.charge2.x = WIDTH / 2 - 5
+    self.charge2.y = HEIGHT / 2 - 10
 
-    self.spotEmitter = particleSystem.ParticleSystem ("assets.particles.particle_spot", image.Image("assets/particles/ticles_shine.png").img)
-    self:addComponent(self.spotEmitter)
-    self.spotEmitter:setReference (self.hitbox.position)
-    self.spotEmitter.x = WIDTH / 2 - 5
-    self.spotEmitter.y = HEIGHT / 2 - 10
+    self.charge3 = particleSystem.ParticleSystem ("assets.particles.charge_steam_03", image.Image("assets/particles/ticles_smoke.png").img)
+    self:addComponent(self.charge3)
+    self.charge3:setReference (self.hitbox.position)
+    self.charge3.x = WIDTH / 2 - 5
+    self.charge3.y = HEIGHT / 2 - 10
 end)
 
 function Player:canMove()
