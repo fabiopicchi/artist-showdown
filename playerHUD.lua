@@ -26,10 +26,6 @@ local hudEmitter2 = particleSystem.ParticleSystem ("assets.particles.particle_hu
 local hudEmitter3 = particleSystem.ParticleSystem ("assets.particles.particle_hud3", image.Image("assets/particles/ticles_shine.png").img)
 local hudEmitter4 = particleSystem.ParticleSystem ("assets.particles.particle_hud4", image.Image("assets/particles/ticles_shine.png").img)
 
-hudEmitter1:stop()
-hudEmitter2:stop()
-hudEmitter3:stop()
-hudEmitter4:stop()
 
 local barPosition1 = {x = 99, y = 35}
 local barPosition2 = {x = 126, y = 35} 
@@ -52,7 +48,6 @@ PlayerHUD = utils.inheritsFrom (entity.Entity, function (self, playerId, scoreRe
     
     self.scoreReference = scoreReference
     self.stars = 1
-    self.lastScore = 0
 
     if playerId == 1 then
         self.position = {x = 0, y = 20}
@@ -66,6 +61,9 @@ PlayerHUD = utils.inheritsFrom (entity.Entity, function (self, playerId, scoreRe
         coverImage1:setReference(self.position)
         lightImage1:setReference(self.position)
         self.initialStarPosition = initialStarPosition1
+        self.hudEmitter = self:addComponent(hudEmitter1)
+        self.hudEmitter.x = 188
+        self.hudEmitter.y = 65
         self.growth = 1
 
     elseif playerId == 2 then
@@ -80,6 +78,9 @@ PlayerHUD = utils.inheritsFrom (entity.Entity, function (self, playerId, scoreRe
         coverImage2:setReference(self.position)
         lightImage2:setReference(self.position)
         self.initialStarPosition = initialStarPosition2
+        self.hudEmitter = self:addComponent(hudEmitter2)
+        self.hudEmitter.x = 32
+        self.hudEmitter.y = 65
         self.growth = -1
 
     elseif playerId == 3 then
@@ -94,6 +95,7 @@ PlayerHUD = utils.inheritsFrom (entity.Entity, function (self, playerId, scoreRe
         coverImage3:setReference(self.position)
         lightImage3:setReference(self.position)
         self.initialStarPosition = initialStarPosition3
+        self.hudEmitter = self:addComponent(hudEmitter3)
         self.growth = 1
 
     else
@@ -108,20 +110,24 @@ PlayerHUD = utils.inheritsFrom (entity.Entity, function (self, playerId, scoreRe
         coverImage4:setReference(self.position)
         lightImage4:setReference(self.position)
         self.initialStarPosition = initialStarPosition4
+        self.hudEmitter = self:addComponent(hudEmitter4)
         self.growth = -1
-
     end
+    self.hudEmitter:setReference(self.position)
 
     self.light.visible = false
 end)
 
 function PlayerHUD:update()
-    if self.lastScore ~= self.scoreReference.points then
+    entity.Entity.update(self)
+
+    if self.scoreReference.lastPoints ~= self.scoreReference.points then
+        self.hudEmitter:start()
         self.light.visible = true
     else
+        self.hudEmitter:stop()
         self.light.visible = false
     end
-    self.lastScore = self.scoreReference.points
 
     if self.scoreReference.points >= starsProgression[self.stars + 1] and self.stars + 1 < #starsProgression then
         local star = self:addComponent(image.Image("assets/images/ui/ui_star.png"))

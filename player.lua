@@ -5,6 +5,7 @@ local pairs = pairs
 local utils = require "utils"
 local shape = require "shape"
 local timer = require "timer"
+local image = require "image"
 local entity = require "entity"
 local hitbox = require "hitbox"
 local framedata = require "framedata"
@@ -77,6 +78,7 @@ Player = utils.inheritsFrom (entity.Entity, function (self, gamepad, character)
     self.jumpOrigin = 0
     self.chargeTime = 0
     self.points = 0
+    self.lastPoints = 0
     self.timers = {}
     self.characterId = character
     self.framedata = framedata[self.characterId]
@@ -471,20 +473,13 @@ Player = utils.inheritsFrom (entity.Entity, function (self, gamepad, character)
     end,
     interruptAttack)
 
-	--self.downattEmitter = particleSystem.ParticleSystem ("assets.particles.bandman_downatt", image.Image("assets/particles/ticles_note.png").img)
-	--player: addComponent(self.downattEmitter)
-	--self.downattEmitter.y = 40
-	--self.downattEmitter: stop()
-	
     self.flagManager:addFlag(
     "ATTACK_DOWN",
     nil,
     function ()
         prepareAttack(self.attackData.down)
-		--self.downattEmitter:start()
     end,
     interruptAttack
-	--self.downattEmitter:stop()
     )
 
     self.flagManager:addFlag(
@@ -555,6 +550,29 @@ Player = utils.inheritsFrom (entity.Entity, function (self, gamepad, character)
     -- self.flagManager:addFlag("EXPRESSION")
     self.gamepad = gamepad
 
+    self.spotEmitter = particleSystem.ParticleSystem ("assets.particles.particle_spot", image.Image("assets/particles/ticles_shine.png").img)
+    self:addComponent(self.spotEmitter)
+    self.spotEmitter:setReference (self.hitbox.position)
+    self.spotEmitter.x = WIDTH / 2 - 5
+    self.spotEmitter.y = HEIGHT / 2 - 10
+
+    self.spotEmitter = particleSystem.ParticleSystem ("assets.particles.particle_spot", image.Image("assets/particles/ticles_shine.png").img)
+    self:addComponent(self.spotEmitter)
+    self.spotEmitter:setReference (self.hitbox.position)
+    self.spotEmitter.x = WIDTH / 2 - 5
+    self.spotEmitter.y = HEIGHT / 2 - 10
+
+    self.spotEmitter = particleSystem.ParticleSystem ("assets.particles.particle_spot", image.Image("assets/particles/ticles_shine.png").img)
+    self:addComponent(self.spotEmitter)
+    self.spotEmitter:setReference (self.hitbox.position)
+    self.spotEmitter.x = WIDTH / 2 - 5
+    self.spotEmitter.y = HEIGHT / 2 - 10
+
+    self.spotEmitter = particleSystem.ParticleSystem ("assets.particles.particle_spot", image.Image("assets/particles/ticles_shine.png").img)
+    self:addComponent(self.spotEmitter)
+    self.spotEmitter:setReference (self.hitbox.position)
+    self.spotEmitter.x = WIDTH / 2 - 5
+    self.spotEmitter.y = HEIGHT / 2 - 10
 end)
 
 function Player:canMove()
@@ -656,6 +674,12 @@ function Player:update()
 
     if not self.hitbox:wasTouching(hitbox.BOTTOM) and self.hitbox:isTouching(hitbox.BOTTOM) then
         love.audio.play(landingSounds[1])
+    end
+
+    if self.points - self.lastPoints == 5 then
+        self.spotEmitter:start()
+    else
+        self.spotEmitter:stop()
     end
 
     entity.Entity.update (self)

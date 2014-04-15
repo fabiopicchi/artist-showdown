@@ -83,10 +83,8 @@ end
 
 ParticleSystem = utils.inheritsFrom(referrer.Referrer, function (self, settings, image)
     referrer.Referrer.__constructor(self)
-    self:setReference ({x = 640, y = 360})
-
     self.ps = getPS(settings, image)
-    self.ps:start()
+    self.ps:stop()
 end)
 
 function ParticleSystem:added(parent)
@@ -106,6 +104,7 @@ function ParticleSystem:stop()
 end
 
 function ParticleSystem:draw()
+    love.graphics.reset()
     love.graphics.draw(self.ps, self.reference.x + self.x, self.reference.y + self.y)
 end
 

@@ -1,4 +1,5 @@
 local table = table
+local ipairs = ipairs
 
 local constants = require "constants"
 local timer = require "timer"
@@ -42,11 +43,6 @@ GameContext = utils.inheritsFrom (context.Context, function (self, nPlayers)
     spotlightGraphic.x = - (spotlightGraphic.img:getWidth() - spotlightHitbox.width) / 2 + 65
     spotlightGraphic.y = - spotlightGraphic.img:getHeight() + spotlightHitbox.height + 30
 
-	self.spotEmitter = particleSystem.ParticleSystem ("assets.particles.particle_spot", image.Image("assets/particles/ticles_shine.png").img)
-	spotlight: addComponent(self.spotEmitter)
-	self.spotEmitter.y = -65
-	self.spotEmitter: stop()
-	
     self:addEntity (spotlight)
 
     local upWall = self:addEntity(box.Box(0,0,1280,50))
@@ -85,6 +81,11 @@ end
 function GameContext:update()
     if self.running then
         context.Context.update(self)
+        
+        for i, player in ipairs(self.players) do
+            player.lastPoints = player.points
+        end
+
         hitbox.collide ("player", "wall")
         hitbox.overlap ("player", "attack", 
         function (a, b)
@@ -94,7 +95,6 @@ function GameContext:update()
         end)
         hitbox.overlap ("player", "spot",
         function (a, b)
-			self.spotEmitter:start()
             a.score ()
         end)
     end
