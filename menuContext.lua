@@ -20,7 +20,7 @@ MenuContext = utils.inheritsFrom (context.Context, function (self)
     context.Context.__constructor(self)
     
     bg = self:addEntity (entity.Entity())
-    bg:addComponent (image.Image("assets/images/menu/bg_main.png"))
+    bg:addComponent (image.Image("assets/images/menu/menu.jpg"))
 
     self.flagManagerEntity = self:addEntity(entity.Entity())
 
@@ -123,7 +123,7 @@ MenuContext = utils.inheritsFrom (context.Context, function (self)
 
     self.bgMusic = love.audio.newSource("assets/sound/songs/Musica_generica.mp3")
     self.bgMusic:setLooping(true)
-    love.audio.play(self.bgMusic)
+    --love.audio.play(self.bgMusic)
 
     self.back = love.audio.newSource("assets/sound/sfx/menu_back.ogg")
     self.select = love.audio.newSource("assets/sound/sfx/menu_accept.ogg")

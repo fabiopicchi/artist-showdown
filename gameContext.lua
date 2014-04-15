@@ -22,16 +22,43 @@ GameContext = utils.inheritsFrom (context.Context, function (self, nPlayers)
     
     local bg = self:addEntity (entity.Entity())
     bg:addComponent (image.Image("assets/images/levels/onemanband2.jpg"))
-
-    local leftBlock = self:addEntity(box.Box(50,570,200,100,{78, 51, 26, 255}))
-    local rightBlock = self:addEntity(box.Box(1030,570,200,100,{78, 51, 26, 255}))
-
-    local leftPlatform = self:addEntity(box.Box(50,420,70,150,{78, 51, 26, 255}))
-    local rightPlatform = self:addEntity(box.Box(1160,420,70,150,{78, 51, 26, 255}))
-
-    local spotPlatform = self:addEntity(box.Box(440, 340, 400, 30,{78, 51, 26, 255}))
-
     self.nPlayers = nPlayers
+    self.running = true
+end)
+
+
+function GameContext:init()
+    self.players = {}
+
+    for i = 1, self.nPlayers do
+        local player = self:addEntity(player.Player(self.gamepads[i], "Player_" .. i))
+        table.insert(self.players, player)
+        self:addEntity (playerHUD.PlayerHUD(i, player))
+    end
+
+    love.audio.stop()
+
+    local leftBlock = self:addEntity(box.Box(50,570,200,100))
+
+    local rightBlock = self:addEntity(box.Box(1030,570,200,100))
+
+    local leftPlatform = self:addEntity(box.Box(50,420,70,150))
+    local leftPlatformAsset = leftPlatform:addComponent(image.Image("assets/images/levels/plataforma2.png"))
+    leftPlatformAsset:setReference(leftPlatform.hitbox.position)
+    leftPlatformAsset.x = -34
+    leftPlatformAsset.y = -11
+
+    local rightPlatform = self:addEntity(box.Box(1160,420,70,150))
+    local rightPlatformAsset = rightPlatform:addComponent(image.Image("assets/images/levels/plataforma3.png"))
+    rightPlatformAsset:setReference(rightPlatform.hitbox.position)
+    rightPlatformAsset.x = -137
+    rightPlatformAsset.y = -11
+
+    local spotPlatform = self:addEntity(box.Box(440, 340, 400, 30))
+    local spotPlatformAsset = spotPlatform:addComponent(image.Image("assets/images/levels/plataforma1.png"))
+    spotPlatformAsset:setReference(spotPlatform.hitbox.position)
+    spotPlatformAsset.x = -6
+    spotPlatformAsset.y = -17
 
     local spotlight = entity.Entity ()
     local spotlightHitbox = spotlight:addComponent (hitbox.Hitbox (150, 100, "spot"))
@@ -50,26 +77,9 @@ GameContext = utils.inheritsFrom (context.Context, function (self, nPlayers)
     local downWall = self:addEntity(box.Box(50,670,1230,50))
     local rightWall = self:addEntity(box.Box(1230,50,50,620))
 
-
-    self.running = true
-
-end)
-
-
-function GameContext:init()
-    self.players = {}
-
-    for i = 1, self.nPlayers do
-        local player = self:addEntity(player.Player(self.gamepads[i], "Player_" .. i))
-        table.insert(self.players, player)
-        self:addEntity (playerHUD.PlayerHUD(i, player))
-    end
-
-    love.audio.stop()
-
     local bgMusic = love.audio.newSource("assets/sound/songs/Polka.mp3")
     bgMusic:setLooping(true)
-    love.audio.play(bgMusic)
+    --love.audio.play(bgMusic)
 
     timerEntity = self:addEntity (entity.Entity())
     timerEntity.timer = timerEntity:addComponent(timer.Timer())
